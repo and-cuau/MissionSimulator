@@ -1,0 +1,107 @@
+#root {
+  max-width: 1280px;
+  /* margin: 0 auto; */
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+h2 {
+  text-align: center;
+}
+
+.dash {
+  /* display: grid; */
+  /* grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(3, 1fr); */
+  /* width: 500px;
+  column-gap: 4px; */
+
+  border: 5px solid #f0f0f0;
+}
+
+.tables {
+  display: flex;
+
+  /* border: 2px dashed aquamarine; */
+  height: 430px;
+  width: 100%;
+}
+
+.charts {
+  display: flex;
+  gap: 50px;
+}
+
+.charts2 {
+  display: flex;
+  gap: 50px;
+}
+
+.compact-table {
+  border-collapse: collapse;
+  font-size: 0.85rem; /* Smaller text */
+}
+.compact-table th,
+.compact-table td {
+  padding: 4px 1px; /* Tighten padding */
+  border: 1px solid #ccc; /* Optional: subtle borders */
+  font-size: 11px;
+}
+
+.compact-table th {
+  background-color: #f0f0f0; /* Light gray background */
+  color: black;
+  font-weight: bold; /* Bold text */
+  font-size: 11px;
+  text-align: left; /* Align text to the left */
+}
+
+.tableport {
+  /* border: 2px solid red; */
+  height: 300px;
+  overflow-y: auto;
+  width: 515px;
+}
+
+.tableporttrans {
+  height: 300px;
+  overflow-y: auto;
+  width: 143px;
+  /* border: 2px solid red; */
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}

@@ -1,0 +1,97 @@
+// import React, { useState, useRef } from "react";
+// import { useAuth } from "../contexts/AuthContext";
+
+// export default function Assets() {
+//   const { missionId, setMissionId } = useAuth();
+//   const { user, setUser } = useAuth();
+//   const formRef = useRef<HTMLFormElement | null>(null);
+
+//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+//     e.preventDefault();
+//     console.log("handlesubmit ran");
+
+//     if (!formRef.current) return;
+
+//     const formData = new FormData(formRef.current);
+//     const plainObject = Object.fromEntries(formData.entries());
+
+//     const response = await fetch(
+//       `http://localhost:3000/missions/${missionId}/assets`,
+//       {
+//         method: "POST",
+//         body: JSON.stringify(plainObject),
+//         headers: {
+//           "X-User-ID": "12345",
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${user?.token}`,
+//         },
+//       },
+//     );
+
+//     const result = await response.text();
+//     console.log(result);
+//   };
+
+//   return (
+//     <>
+//       <form
+//         ref={formRef}
+//         onSubmit={handleSubmit}
+//         style={styles.sectioncontainer}
+//       >
+//         <h2>Assets</h2>
+//         <div style={styles.inputcontainer}>
+//           <span>Asset Type: </span>
+//           <input name="type" />
+//         </div>
+
+//         <div style={styles.inputcontainer}>
+//           <span>Status: </span>
+//           <input name="status" />
+//         </div>
+
+//         <div style={styles.inputcontainer}>
+//           <span>Location: </span>
+//           <input name="location" />
+//         </div>
+
+//         <div style={styles.inputcontainer}>
+//           <span>Capabilities: </span>
+//           <input name="capabilities" />
+//         </div>
+//         <button type="submit">Enter</button>
+//       </form>
+//     </>
+//   );
+// }
+
+// const styles = {
+//   sectioncontainer: {
+//     display: "inline-block",
+//     margin: "0px 10px",
+//     // border: "2px solid red",
+//     verticalAlign: "top",
+//   },
+//   inputcontainer: {
+//     display: "flex",
+//     justifyContent: "space-between",
+//     margin: "10px 0px",
+//   },
+//   arrow: {
+//     position: "absolute",
+//     top: "50%",
+//     transform: "translateY(-50%)",
+//     fontSize: "2rem",
+//     backgroundColor: "rgba(0,0,0,0.3)",
+//     color: "white",
+//     border: "none",
+//     cursor: "pointer",
+//     padding: "0 10px 10px 10px",
+//     zIndex: 1,
+//   },
+//   image: {
+//     width: "100%",
+//     height: "100%",
+//     display: "block",
+//   },
+// };
