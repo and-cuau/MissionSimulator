@@ -101,7 +101,7 @@ export default function Personnel() {
                 />
               </div>
 
-              <div style={styles.inputcontainer}>
+              {/* <div style={styles.inputcontainer}>
                 <span>Assignment Time: </span>
                 <input
                   name="assignment_time"
@@ -109,7 +109,7 @@ export default function Personnel() {
                   value={person.assignment_time}
                   onChange={(e) => handleChange(index, e)}
                 />
-              </div>
+              </div> */}
 
               <div style={styles.inputcontainer}>
                 <span>Clearance Level: </span>

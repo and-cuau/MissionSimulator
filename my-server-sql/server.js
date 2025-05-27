@@ -7,8 +7,15 @@ const util = require("util");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const logAction = require("./logaction");
-const { myQueue, addMissionJob } = require("./queue");
+
+// const { myQueue, addMissionJob } = require("./queue");
+const  addMissionJob  = require("./queue");
 const initiateTask = require("./worker");
+
+const initiateMission = require("./flow_parent_worker");
+const initiateObjective = require("./flow_child_worker");
+
+const addMissionToFlow = require("./flow");
 
 // SECRET to sign tokens (keep this hidden!)
 const SECRET = "my_super_secret_key";
@@ -262,8 +269,8 @@ app.post(
         req.missionId = result.lastID; // now available for logAction
         console.log(`New mission inserted with ID: ${req.missionId}`);
 
-        addMissionJob(mission_title, start_time, end_time, result.lastID);
-        initiateTask();
+        // addMissionJob( start_time, end_time, result.lastID); // FLAG
+        // initiateTask();
 
         return res.send({ id: req.missionId });
       }
@@ -326,6 +333,10 @@ app.post(
     const missionId = req.params.missionId;
     console.log("POST /missions/" + missionId + "/objectives was called");
     const missionObjectives = req.body;
+
+    addMissionToFlow(missionId, missionObjectives);
+    initiateMission();
+    initiateObjective();
 
     for (let objective of missionObjectives) {
       const {

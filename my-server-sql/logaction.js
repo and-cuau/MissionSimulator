@@ -6,11 +6,11 @@ module.exports = (action, getTargetId = () => null) => {
       if (req.user && res.statusCode < 400) {
         const targetId = getTargetId(req, res);
 
-        console.log("Logging action:");
-        console.log("User ID:", req.user.userId); // Use req.user
-        console.log("Action:", action);
-        console.log("Target ID:", targetId);
-        console.log("User-Agent:", req.headers["user-agent"]);
+        // console.log("Logging action:");
+        // console.log("User ID:", req.user.userId); // Use req.user
+        // console.log("Action:", action);
+        // console.log("Target ID:", targetId);
+        // console.log("User-Agent:", req.headers["user-agent"]);
 
         const stmt = req.db.prepare(`
             INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent)

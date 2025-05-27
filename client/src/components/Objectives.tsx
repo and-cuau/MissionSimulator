@@ -24,7 +24,7 @@ export default function Objectives() {
       mission_id: "",
       description: "",
       status: "",
-      depends_on: "",
+      depends_on: "0",
       estimated_duration: "",
       start_time: "",
       end_time: "",
@@ -64,6 +64,9 @@ export default function Objectives() {
   };
 
   const handleAddObjective = () => {
+
+    // const lastItem = objectives[objectives.length - 1];
+
     const newObjective: Objective = {
       mission_id: "",
       description: "",
@@ -111,7 +114,8 @@ export default function Objectives() {
                   onChange={(e) => handleChange(index, e)}
                 />
               </div>
-              <div style={styles.inputcontainer}>
+
+              {/* <div style={styles.inputcontainer}>
                 <span>Start Time: </span>
                 <input
                   name="start_time"
@@ -128,7 +132,8 @@ export default function Objectives() {
                   value={objective.end_time}
                   onChange={(e) => handleChange(index, e)}
                 />
-              </div>
+              </div> */}
+
             </div>
           ))}
         </div>

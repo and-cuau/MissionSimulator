@@ -1,4 +1,4 @@
-// worker.js
+// flow_child_worker.js
 const { Worker } = require("bullmq");
 const IORedis = require("ioredis");
 
@@ -8,14 +8,16 @@ const connection = new IORedis({
   maxRetriesPerRequest: null,
 });
 
+//  const newObj = {name: description, queueName: "objectives", data:{ description: description, length: estimated_duration}, children: null};
+
 module.exports = () => {
   const worker = new Worker(
-    "my-queue",
+    "objectives",
     async (job) => {
       try {
         console.log();
 
-        const now = new Date().toISOString();
+        const now = new Date().toLocaleString();
         console.log(`[${now}] Processing job:`, job.name, job.data);
 
         console.log();
@@ -24,7 +26,7 @@ module.exports = () => {
 
         console.log();
 
-        const now2 = new Date().toISOString();
+        const now2 = new Date().toLocaleString();
         console.log(`[${now2}] task finished`);
         console.log();
       } catch (err) {

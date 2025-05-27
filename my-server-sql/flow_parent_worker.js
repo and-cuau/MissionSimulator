@@ -1,4 +1,4 @@
-// worker.js
+// flow_parent_worker.js
 const { Worker } = require("bullmq");
 const IORedis = require("ioredis");
 
@@ -10,7 +10,7 @@ const connection = new IORedis({
 
 module.exports = () => {
   const worker = new Worker(
-    "my-queue",
+    "missions",
     async (job) => {
       try {
         console.log();
