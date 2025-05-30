@@ -64,7 +64,6 @@ export default function Objectives() {
   };
 
   const handleAddObjective = () => {
-
     // const lastItem = objectives[objectives.length - 1];
 
     const newObjective: Objective = {
@@ -133,7 +132,6 @@ export default function Objectives() {
                   onChange={(e) => handleChange(index, e)}
                 />
               </div> */}
-
             </div>
           ))}
         </div>

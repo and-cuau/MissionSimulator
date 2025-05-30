@@ -1,5 +1,10 @@
 const express = require("express");
+
+const http = require("http");
+const { Server } = require("socket.io");
+
 const app = express();
+const httpServer = http.createServer(app); // added to share server with websocket connections
 const PORT = 3000;
 
 const bodyParser = require("body-parser");
@@ -7,10 +12,6 @@ const util = require("util");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const logAction = require("./logaction");
-
-// const { myQueue, addMissionJob } = require("./queue");
-const  addMissionJob  = require("./queue");
-const initiateTask = require("./worker");
 
 const initiateMission = require("./flow_parent_worker");
 const initiateObjective = require("./flow_child_worker");
@@ -60,9 +61,7 @@ const db = new sqlite3.Database("./storage.db");
 const cors = require("cors");
 
 app.use(cors());
-
 app.use(express.json()); // imprtant for reading req body ! Modern, built-in way
-
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
@@ -81,6 +80,7 @@ db.run(`CREATE TABLE IF NOT EXISTS missions (
   mission_title TEXT NOT NULL UNIQUE,
   mission_desc TEXT NOT NULL,
   priority_level TEXT NOT NULL,
+  status TEXT NOT NULL,
   start_time DATETIME NOT NULL,
   end_time DATETIME NOT NULL,
   CHECK (end_time > start_time)
@@ -144,7 +144,42 @@ app.get("/", (req, res) => {
   res.send("Hello, World!");
 });
 
-app.listen(PORT, () => {
+const io = new Server(httpServer, {
+  cors: { origin: "*" },
+});
+
+const { QueueEvents } = require("bullmq");
+const IORedis = require("ioredis");
+const connection = new IORedis({
+  host: "127.0.0.1",
+  port: 6379,
+  maxRetriesPerRequest: null,
+});
+
+const queueEvents = new QueueEvents("objectives", { connection });
+
+queueEvents.on("progress", ({ jobId, data }) => {
+  // Emit progress to frontend
+  console.log("objective progress event");
+  io.emit(`job-progress-${jobId}`, data); // or socket.to(userRoom).emit(...)
+});
+
+queueEvents.on("completed", async ({ jobId }) => {
+  // Parent job finished; now create child job
+  // const childJob = await queue.add('child-task', { parent: jobId });
+
+  // Notify any clients that care about this
+  io.emit(`job-complete-${jobId}`, { JobId: jobId });
+});
+
+io.on("connection", (socket) => {
+  console.log("WebSocket client connected");
+  socket.on("subscribeToJob", (jobId) => {
+    socket.join(`job-${jobId}`);
+  });
+});
+
+httpServer.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
 
@@ -240,6 +275,8 @@ app.post(
   async (req, res) => {
     console.log("POST /missions was called");
 
+    console.log(req.body);
+
     const {
       mission_title,
       mission_desc,
@@ -248,16 +285,25 @@ app.post(
       end_time,
     } = req.body;
 
-    console.log("priority lvl:"+priority_level);
+    console.log("priority lvl:" + priority_level);
+
+    const mission_status = "draft";
 
     try {
       const result = await db.run(
-        `INSERT OR IGNORE INTO missions (mission_title, mission_desc, priority_level, start_time, end_time)
-         VALUES (?, ?, ?, ?, ?)`,
-        [mission_title, mission_desc, priority_level, start_time, end_time],
+        `INSERT OR IGNORE INTO missions (mission_title, mission_desc, priority_level, status, start_time, end_time)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          mission_title,
+          mission_desc,
+          priority_level,
+          mission_status,
+          start_time,
+          end_time,
+        ],
       );
 
-      if (result.changes === 0) {
+      if (result.changes == 0) {
         // Duplicate title, fetch existing ID
         const row = await db.get(
           "SELECT id FROM missions WHERE mission_title = ?",
@@ -314,7 +360,8 @@ app.post(
     const status = "ready";
 
     for (let asset of missionAssets) {
-      const { missionIdUnused, asset_type, status, location, capabilities } = asset;
+      const { missionIdUnused, asset_type, status, location, capabilities } =
+        asset;
       await db.run(
         "INSERT OR IGNORE INTO assets (mission_id, asset_type, status, location, capabilities) VALUES (?, ?, ?, ?, ?)",
         [missionId, asset_type, status, location, capabilities],
@@ -334,9 +381,10 @@ app.post(
     console.log("POST /missions/" + missionId + "/objectives was called");
     const missionObjectives = req.body;
 
-    addMissionToFlow(missionId, missionObjectives);
-    initiateMission();
-    initiateObjective();
+    // addMissionToFlow(missionId, missionObjectives);
+    // initiateMission();
+    // initiateObjective();
+    console.log("test after intitiate child worker");
 
     for (let objective of missionObjectives) {
       const {
@@ -360,6 +408,49 @@ app.post(
         ],
       );
     }
+
+    return res.send("route called on start error solved?");
+  },
+);
+
+app.post(
+  "/missions/:missionId/schedule",
+  authenticateToken,
+  authorizeRoles("admin", "commander"),
+  logAction("OBJECTIVE_CREATED", (req) => req.missionId),
+  async (req, res) => {
+    const missionId = req.params.missionId;
+
+    console.log("POST /missions/" + missionId + "/schedule was called");
+
+    db.run(
+      `UPDATE missions SET status = 'scheduled' WHERE id = ?`,
+      [missionId],
+      function (err) {
+        if (err) {
+          return console.error(err.message);
+        }
+        console.log(`Row(s) updated: ${this.changes}`);
+      },
+    );
+
+    db.all(
+      "SELECT * FROM objectives WHERE mission_id = ?",
+      [missionId],
+      (err, rows) => {
+        if (err) {
+          console.error("Database error:", err);
+          throw err;
+        }
+        console.log(rows);
+
+        addMissionToFlow(missionId, rows);
+        initiateMission();
+        initiateObjective();
+
+        // return res.send(rows);
+      },
+    );
 
     return res.send("route called on start error solved?");
   },
@@ -390,11 +481,13 @@ app.patch("/missions/", (req, res) => {
   );
 });
 
-app.get("/missions/", (req, res) => {
+app.get("/missions", (req, res) => {
   // fetch all missions
-  console.log("GET /missions/ was called");
 
-  db.all("SELECT * FROM missions", (err, rows) => {
+  const status = req.query.status;
+  console.log("GET /missions/" + status + "was called");
+
+  db.all("SELECT * FROM missions WHERE status = ?", [status], (err, rows) => {
     if (err) {
       throw err;
     }
@@ -412,14 +505,12 @@ app.get("/missions/:missionId", (req, res) => {
   const missionId = req.params.missionId;
   console.log("GET /missions/" + missionId + "was called");
 
-  db.all("SELECT * FROM missions", (err, rows) => {
+  db.run("SELECT * FROM missions", (err, rows) => {
     if (err) {
       throw err;
     }
 
-    rows.forEach((row) => {
-      row.mission_id = row.mission_id.toString();
-    });
+    row.id = row.id.toString();
 
     return res.send(rows);
   });
@@ -451,7 +542,7 @@ app.get("/missions/:missionId/assets", (req, res) => {
   console.log("GET /missions/" + missionId + "/assets was called");
 
   db.all(
-    "SELECT * FROM assets where mission_id = ?",
+    "SELECT * FROM assets WHERE mission_id = ?",
     [missionId],
     (err, rows) => {
       if (err) {
@@ -474,7 +565,7 @@ app.get("/missions/:missionId/objectives", (req, res) => {
   console.log("GET /missions/" + missionId + "/objectives was called");
 
   db.all(
-    "SELECT * FROM objectives where mission_id = ?",
+    "SELECT * FROM objectives WHERE mission_id = ?",
     [missionId],
     (err, rows) => {
       if (err) {

@@ -5,6 +5,8 @@ import MissionInfo from "./MissionInfo";
 import Personnel from "./Personnel";
 import Assets from "./Assets";
 import Objectives from "./Objectives";
+import ObjectiveProgress from "./ObjectiveProgress";
+import MultiMissionProgress from "./MultiMissionProgress";
 
 import { useAuth } from "../contexts/AuthContext";
 
@@ -13,6 +15,7 @@ interface Mission {
   mission_title: string;
   mission_desc: string;
   priority_level: string;
+  status: string;
   start_time: string;
   end_time: string;
   // Add more fields as needed
@@ -49,6 +52,8 @@ export default function Dashboard() {
   const { missionId, setMissionId } = useAuth();
   const { user, setUser } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
+  const [scheduledMissions, setScheduledMissions] = useState<Mission[]>([]);
+
   const [personnel, setPersonnel] = useState<Person[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [objectives, setObjectives] = useState<Objective[]>([]);
@@ -60,7 +65,15 @@ export default function Dashboard() {
 
     (async () => {
       try {
-        await getMissions(id ?? "0");
+        await getMissions("draft");
+      } catch (err) {
+        console.error("Failed to fetch mission in useEffect:", err);
+      }
+    })();
+
+    (async () => {
+      try {
+        await getMissions("scheduled");
       } catch (err) {
         console.error("Failed to fetch mission in useEffect:", err);
       }
@@ -100,27 +113,42 @@ export default function Dashboard() {
     })();
   }
 
-  async function getMissions(id: string): Promise<Mission[]> {
-    const res = await fetch(`http://localhost:3000/missions/`); // /${id}
+  async function getMissions(status: string): Promise<Mission[]> {
+    const res = await fetch(`http://localhost:3000/missions/?status=${status}`); // /${id}
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch mission ${id}`);
+      // throw new Error(`Failed to fetch mission ${id}`);
     }
 
     const raw = await res.json();
 
     const data: Mission[] = raw;
 
-    setMissions(
-      data.map((el) => ({
-        id: el.id,
-        mission_title: el.mission_title,
-        mission_desc: el.mission_desc,
-        priority_level: el.priority_level,
-        start_time: el.start_time,
-        end_time: el.end_time,
-      })),
-    );
+    if (status === "draft") {
+      setMissions(
+        data.map((el) => ({
+          id: el.id,
+          mission_title: el.mission_title,
+          mission_desc: el.mission_desc,
+          priority_level: el.priority_level,
+          status: el.status,
+          start_time: el.start_time,
+          end_time: el.end_time,
+        })),
+      );
+    } else {
+      setScheduledMissions(
+        data.map((el) => ({
+          id: el.id,
+          mission_title: el.mission_title,
+          mission_desc: el.mission_desc,
+          priority_level: el.priority_level,
+          status: el.status,
+          start_time: el.start_time,
+          end_time: el.end_time,
+        })),
+      );
+    }
 
     return data;
   }
@@ -228,10 +256,14 @@ export default function Dashboard() {
     }
   };
 
-  const startMission = async (id: string) => {
+  const scheduleMission = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/missions/${id}/start`, {
+      const res = await fetch(`http://localhost:3000/missions/${id}/schedule`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
       }); // issue is that role prop is capitalized
 
       if (!res.ok) throw new Error("Server error");
@@ -254,9 +286,12 @@ export default function Dashboard() {
         {user?.user_id} {user?.user_name} {user?.role} {user?.token}
       </h2>
       <h2>{missionId}</h2>
-      <div className="dash">
+      <div style={styles.dash}>
         <div>
-          <MissionInfo></MissionInfo>
+          <MissionInfo
+            get={getMissions}
+            setMissions={setMissions}
+          ></MissionInfo>
           <Personnel></Personnel>
         </div>
 
@@ -264,79 +299,140 @@ export default function Dashboard() {
           <Assets></Assets>
           <Objectives></Objectives>
         </div>
+        <div style={styles.spacer}></div>
 
-        <div style={styles.listcontainer}>
-          <ul>
-            {missions.map((mission, index) => (
-              <li key={index}>
-                <div style={styles.entry_element}>
-                  {mission.id + " " + mission.mission_title}
-                </div>
-                <div style={styles.entry_element}>{mission.mission_desc}</div>
-                <div style={styles.entry_element}>{mission.priority_level}</div>
-                <div style={styles.entry_element}>{mission.start_time}</div>
-                <div style={styles.entry_element}>{mission.end_time}</div>
-                <div style={styles.buttons}>
-                  <button
-                    onClick={() => {
-                      setMissionId(mission.id);
-                      fetchMissionData(mission.id);
-                    }}
-                  >
-                    View
-                  </button>
-                  <button onClick={() => deleteMission(mission.id)}>
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div style={styles.missiondetails}>
+          <div style={styles.listcontainer1}>
+            <ul>
+              {missions.map((mission, index) => (
+                <li key={index}>
+                  <div style={styles.entry_element}>
+                    {mission.id + " " + mission.mission_title}
+                  </div>
+                  <div style={styles.entry_element}>{mission.mission_desc}</div>
+                  <div style={styles.entry_element}>
+                    {mission.priority_level}
+                  </div>
+                  <div style={styles.entry_element}>{mission.start_time}</div>
+                  <div style={styles.entry_element}>{mission.end_time}</div>
+                  <div style={styles.buttons}>
+                    <button
+                      onClick={() => {
+                        setMissionId(mission.id);
+                        fetchMissionData(mission.id);
+                      }}
+                    >
+                      View
+                    </button>
+                    <button onClick={() => deleteMission(mission.id)}>
+                      Delete
+                    </button>
+                    <button onClick={() => scheduleMission(mission.id)}>
+                      Schedule
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <>
+            <div style={styles.listcontainer}>
+              <ul>
+                {personnel.map((person, index) => (
+                  <li key={index}>
+                    <div style={styles.entry_element}>{person.mission_id}</div>
+                    <div style={styles.entry_element}>{person.name}</div>
+                    <div style={styles.entry_element}>{person.role}</div>
+                    <div style={styles.entry_element}>
+                      {person.assignment_time}
+                    </div>
+                    <div style={styles.entry_element}>{person.status}</div>
+                    <div style={styles.entry_element}>
+                      {person.clearance_level}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={styles.listcontainer}>
+              <ul>
+                {assets.map((asset, index) => (
+                  <li key={index}>
+                    <div style={styles.entry_element}>{asset.mission_id}</div>
+                    <div style={styles.entry_element}>{asset.asset_type}</div>
+                    <div style={styles.entry_element}>{asset.status}</div>
+                    <div style={styles.entry_element}>{asset.location}</div>
+                    <div style={styles.entry_element}>{asset.capabilities}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div style={styles.listcontainer}>
+              <ul>
+                {objectives.map((objective, index) => (
+                  <li key={index} style={styles.list}>
+                    {/* <div style={styles.entry_element}><span>Mission ID: </span>{objective.mission_id}</div> */}
+                    <div style={styles.entry_element}>
+                      <span>Desc: </span>
+                      {objective.description}
+                    </div>
+                    <div style={styles.entry_element}>{objective.status}</div>
+                    <div style={styles.entry_element}>
+                      <span>Depends on: </span>
+                      {objective.depends_on}
+                    </div>
+                    <div style={styles.entry_element}>
+                      <span>Est. Duration: </span>
+                      {objective.est_duration}
+                    </div>
+                    <div style={styles.entry_element}>
+                      {objective.start_time}
+                    </div>
+                    <div style={styles.entry_element}>{objective.end_time}</div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
         </div>
 
-        <div style={styles.listcontainer}>
-          <ul>
-            {personnel.map((person, index) => (
-              <li key={index}>
-                <div style={styles.entry_element}>{person.mission_id}</div>
-                <div style={styles.entry_element}>{person.name}</div>
-                <div style={styles.entry_element}>{person.role}</div>
-                <div style={styles.entry_element}>{person.assignment_time}</div>
-                <div style={styles.entry_element}>{person.status}</div>
-                <div style={styles.entry_element}>{person.clearance_level}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div style={styles.listcontainer}>
-          <ul>
-            {assets.map((asset, index) => (
-              <li key={index}>
-                <div style={styles.entry_element}>{asset.mission_id}</div>
-                <div style={styles.entry_element}>{asset.asset_type}</div>
-                <div style={styles.entry_element}>{asset.status}</div>
-                <div style={styles.entry_element}>{asset.location}</div>
-                <div style={styles.entry_element}>{asset.capabilities}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div style={styles.listcontainer}>
-          <ul>
-            {objectives.map((objective, index) => (
-              <li key={index}>
-                <div style={styles.entry_element}>{objective.mission_id}</div>
-                <div style={styles.entry_element}>{objective.description}</div>
-                <div style={styles.entry_element}>{objective.status}</div>
-                <div style={styles.entry_element}>{objective.depends_on}</div>
-                <div style={styles.entry_element}>{objective.est_duration}</div>
-                <div style={styles.entry_element}>{objective.start_time}</div>
-                <div style={styles.entry_element}>{objective.end_time}</div>
-              </li>
-            ))}
-          </ul>
+        <div style={styles.scheduled}>
+          <MultiMissionProgress></MultiMissionProgress>
+          {/* <div style={styles.scheduled_list}>
+            <ul>
+              {scheduledMissions.map((mission, index) => (
+                <li key={index}>
+                  <div style={styles.entry_element}>
+                    {mission.id + " " + mission.mission_title}
+                  </div>
+                  <div style={styles.entry_element}>{mission.mission_desc}</div>
+                  <div style={styles.entry_element}>
+                    {mission.priority_level}
+                  </div>
+                  <div style={styles.entry_element}>{mission.start_time}</div>
+                  <div style={styles.entry_element}>{mission.end_time}</div>
+                  <div style={styles.buttons}>
+                    <button
+                      onClick={() => {
+                        setMissionId(mission.id);
+                        fetchMissionData(mission.id);
+                      }}
+                    >
+                      View
+                    </button>
+                    <button onClick={() => deleteMission(mission.id)}>
+                      Delete
+                    </button>
+                    <button onClick={() => deleteMission(mission.id)}>
+                      Start
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div> */}
         </div>
       </div>
     </>
@@ -344,11 +440,29 @@ export default function Dashboard() {
 }
 
 const styles = {
+  missiondetails: {
+    width: "770px",
+    display: "flex",
+    flexDirection: "row",
+    border: "2px solid",
+  },
+  list: {
+    marginBottom: "10px",
+    // border: "2px solid red"
+  },
+  spacer: {
+    height: "15px",
+  },
   entry_element: {
     textAlign: "left",
   },
 
-  dash: { width: "700px", height: "1200px", overflowY: "auto" },
+  dash: {
+    width: "795px",
+    height: "2000px",
+    overflowY: "auto",
+    border: "2px solid white",
+  },
   buttons: { display: "flex" },
   sectioncontainer: {
     display: "inline-block",
@@ -371,10 +485,33 @@ const styles = {
     padding: "0 10px 10px 10px",
     zIndex: 1,
   },
+  listcontainer1: {
+    // display: "inline-block",
+    // verticalAlign: "top",
+    flexGrow: "1",
+    height: "500px",
+
+    overflowY: "auto",
+    border: "2px solid red",
+  },
+
   listcontainer: {
+    // display: "inline-block",
+    // verticalAlign: "top",
+    width: "190px",
+    height: "500px",
+
+    overflowY: "auto",
+    border: "2px solid red",
+  },
+  scheduled: {
+    height: "500px",
+    border: "2px solid red",
+  },
+  scheduled_list: {
     display: "inline-block",
-    verticalAlign: "top",
     height: "500px",
     overflowY: "auto",
+    border: "2px solid red",
   },
 };

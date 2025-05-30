@@ -2,7 +2,23 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import Dropdown from "./Dropdown";
 
-export default function MissionInfo() {
+interface Mission {
+  id: string;
+  mission_title: string;
+  mission_desc: string;
+  priority_level: string;
+  status: string;
+  start_time: string;
+  end_time: string;
+  // Add more fields as needed
+}
+
+type MissionInfoProps = {
+  get: (status: string) => void;
+  setMissions: React.Dispatch<React.SetStateAction<Mission[]>>;
+};
+
+export default function MissionInfo({ get }: MissionInfoProps) {
   const { user, setUser } = useAuth();
   const { missionId, setMissionId } = useAuth();
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -73,6 +89,8 @@ export default function MissionInfo() {
     console.log("response from server after posting mission: ");
     console.log(result);
     setMissionId(result.id);
+
+    get("draft");
   };
 
   return (
