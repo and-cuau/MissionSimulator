@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, forwardRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import Dropdown from "./Dropdown";
 
@@ -13,108 +13,114 @@ interface Objective {
   [key: string]: string;
 }
 
-export default function Objectives() {
-  const { missionId, setMissionId } = useAuth();
-  const { user, setUser } = useAuth();
+interface ObjectivesProps {
+  objectives: Objective[];
+  setObjectives: React.Dispatch<React.SetStateAction<Objective[]>>;
+}
 
-  const [objectives, setObjectives] = useState<Objective[]>([]);
+const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
+  ({ objectives, setObjectives }, ref) => {
+    const { missionId, setMissionId } = useAuth();
+    const { user, setUser } = useAuth();
 
-  useEffect(() => {
-    const newObjective: Objective = {
-      mission_id: "",
-      description: "",
-      status: "",
-      depends_on: "0",
-      estimated_duration: "",
-      start_time: "",
-      end_time: "",
-    };
-    setObjectives([newObjective]);
-  }, []);
+    // const [objectives, setObjectives] = useState<Objective[]>([]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log("test handle submit was called");
-    e.preventDefault();
+    useEffect(() => {
+      const newObjective: Objective = {
+        mission_id: "",
+        description: "",
+        status: "",
+        depends_on: "0",
+        estimated_duration: "",
+        start_time: "",
+        end_time: "",
+      };
+      setObjectives([newObjective]);
+    }, []);
 
-    const response = await fetch(
-      `http://localhost:3000/missions/${missionId}/objectives`,
-      {
-        method: "POST",
-        body: JSON.stringify(objectives),
-        headers: {
-          "X-User-ID": "12345",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      console.log("test handle submit was called");
+      e.preventDefault();
+
+      const response = await fetch(
+        `http://localhost:3000/missions/${missionId}/objectives`,
+        {
+          method: "POST",
+          body: JSON.stringify(objectives),
+          headers: {
+            "X-User-ID": "12345",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user?.token}`,
+          },
         },
-      },
-    );
+      );
 
-    const result = await response.text();
-    console.log(result);
-  };
-
-  const handleChange = (
-    index: number,
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    const { name, value } = event.target;
-    const updatedObjectives: Objective[] = [...objectives];
-    updatedObjectives[index][name] = value;
-    setObjectives(updatedObjectives);
-  };
-
-  const handleAddObjective = () => {
-    // const lastItem = objectives[objectives.length - 1];
-
-    const newObjective: Objective = {
-      mission_id: "",
-      description: "",
-      status: "",
-      depends_on: "",
-      estimated_duration: "",
-      start_time: "",
-      end_time: "",
+      const result = await response.text();
+      console.log(result);
     };
 
-    setObjectives([...objectives, newObjective]);
-  };
+    const handleChange = (
+      index: number,
+      event: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+      const { name, value } = event.target;
+      const updatedObjectives: Objective[] = [...objectives];
+      updatedObjectives[index][name] = value;
+      setObjectives(updatedObjectives);
+    };
 
-  return (
-    <>
-      <form onSubmit={handleSubmit} style={styles.sectioncontainer}>
-        <h2>Objectives</h2>
-        <div style={styles.formcontainer}>
-          {objectives.map((objective, index) => (
-            <div style={styles.entry}>
-              <div style={styles.inputcontainer}>
-                <span>Description: </span>
-                <input
-                  name="description"
-                  type="text"
-                  value={objective.description}
-                  onChange={(e) => handleChange(index, e)}
-                />
-              </div>
-              <div style={styles.inputcontainer}>
-                <span>Depends On: </span>
-                <input
-                  name="depends_on"
-                  type="text"
-                  value={objective.depends_on}
-                  onChange={(e) => handleChange(index, e)}
-                />
-              </div>
-              <div style={styles.inputcontainer}>
-                <span>Estimated Duration: </span>
-                <input
-                  name="estimated_duration"
-                  type="text"
-                  value={objective.estimated_duration}
-                  onChange={(e) => handleChange(index, e)}
-                />
-              </div>
+    const handleAddObjective = () => {
+      // const lastItem = objectives[objectives.length - 1];
 
-              {/* <div style={styles.inputcontainer}>
+      const newObjective: Objective = {
+        mission_id: "",
+        description: "",
+        status: "",
+        depends_on: "",
+        estimated_duration: "",
+        start_time: "",
+        end_time: "",
+      };
+
+      setObjectives([...objectives, newObjective]);
+    };
+
+    return (
+      <>
+        <form onSubmit={handleSubmit} ref={ref} style={styles.sectioncontainer}>
+          <h2>Objectives</h2>
+          <div style={styles.formcontainer}>
+            {objectives.map((objective, index) => (
+              <div style={styles.entry}>
+                <div style={styles.inputcontainer}>
+                  <span>Description: </span>
+                  <input
+                    name="description"
+                    type="text"
+                    value={objective.description}
+                    onChange={(e) => handleChange(index, e)}
+                  />
+                </div>
+                <div style={styles.inputcontainer}>
+                  <span>Depends On: </span>
+                  <input
+                    name="depends_on"
+                    type="text"
+                    value={objective.depends_on}
+                    onChange={(e) => handleChange(index, e)}
+                  />
+                </div>
+                <div style={styles.inputcontainer}>
+                  <span>Estimated Duration: </span>
+                  <input
+                    name="estimated_duration"
+                    type="text"
+                    value={objective.estimated_duration}
+                    onChange={(e) => handleChange(index, e)}
+                  />
+                </div>
+
+                {/* <div style={styles.inputcontainer}>
                 <span>Start Time: </span>
                 <input
                   name="start_time"
@@ -132,17 +138,20 @@ export default function Objectives() {
                   onChange={(e) => handleChange(index, e)}
                 />
               </div> */}
-            </div>
-          ))}
-        </div>
-        <button type="button" onClick={handleAddObjective}>
-          Add Objective
-        </button>
-        <button onClick={() => handleSubmit}>Submit</button>
-      </form>
-    </>
-  );
-}
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={handleAddObjective}>
+            Add Objective
+          </button>
+          {/* <button onClick={() => handleSubmit}>Submit</button> */}
+        </form>
+      </>
+    );
+  },
+);
+
+export default Objectives;
 
 const styles = {
   formcontainer: {

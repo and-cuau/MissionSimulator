@@ -107,10 +107,10 @@ export default function ObjectiveProgress({
 // () => connectToServer()
 const styles = {
   test: {
-    display: "inline-block",
+    // display: "inline-block",
     margin: "0px 10px",
-    border: "2px solid red",
-    height: "60px",
+    // border: "2px solid blue",
+    height: "50px",
     width: "130px",
   },
 };

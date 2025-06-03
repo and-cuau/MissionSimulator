@@ -4,13 +4,15 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
+const authRoutes = require("./auth");
+
 const httpServer = http.createServer(app); // added to share server with websocket connections
 const PORT = 3000;
 
 const bodyParser = require("body-parser");
 const util = require("util");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken"); //  JWWWTTTTTT
 const logAction = require("./logaction");
 
 const initiateMission = require("./flow_parent_worker");
@@ -18,15 +20,6 @@ const initiateObjective = require("./flow_child_worker");
 
 const addMissionToFlow = require("./flow");
 
-// SECRET to sign tokens (keep this hidden!)
-const SECRET = "my_super_secret_key";
-
-// When user logs in:
-function generateToken(user) {
-  return jwt.sign({ userId: user.id, role: user.role }, SECRET, {
-    expiresIn: "1h",
-  });
-}
 // Middleware to protect routes:
 function authenticateToken(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1].trim();
@@ -35,6 +28,8 @@ function authenticateToken(req, res, next) {
 
   // const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
   if (!token) return res.sendStatus(401);
+
+  const SECRET = "my_super_secret_key";
 
   jwt.verify(token, SECRET, (err, user) => {
     console.log("before 403");
@@ -69,11 +64,15 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use("/auth", authRoutes);
+
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
-  role TEXT NOT NULL
+  role TEXT NOT NULL,
+  twofa_enabled BOOLEAN,
+  twofa_secret TEXT
 )`);
 db.run(`CREATE TABLE IF NOT EXISTS missions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -139,6 +138,17 @@ db.run = function (sql, params = []) {
   });
 };
 
+const originalAll = db.all;
+
+db.all = function (sql, params = []) {
+  return new Promise((resolve, reject) => {
+    originalAll.call(this, sql, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+};
+
 // Root route
 app.get("/", (req, res) => {
   res.send("Hello, World!");
@@ -148,7 +158,7 @@ const io = new Server(httpServer, {
   cors: { origin: "*" },
 });
 
-const { QueueEvents } = require("bullmq");
+const { QueueEvents, tryCatch } = require("bullmq");
 const IORedis = require("ioredis");
 const connection = new IORedis({
   host: "127.0.0.1",
@@ -197,29 +207,20 @@ app.post("/users", async (req, res) => {
   console.log("password: " + password);
   console.log("hash: " + hash);
 
-  db.run(
+  const result = await db.run(
     "INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)",
     [username, hash, role],
-    function (err) {
-      if (this.changes === 0) {
-        db.get(
-          "SELECT id FROM users WHERE username = ?",
-          [username],
-          (err, row) => {
-            if (err) {
-              console.error("Error retrieving existing user:", err);
-              return res.status(500).send("Database error");
-            }
-            return res.send({ msg: "Username is already taken", id: row.id }); // not sure what i use row.id sent back for
-          },
-        );
-      } else {
-        console.log(`New user inserted with ID: ${this.lastID}`);
-
-        return res.send({ id: this.lastID });
-      }
-    },
   );
+
+  if (result.changes > 0) {
+    console.log(`New user inserted with ID: ${result.lastID}`);
+
+    return res.send({ id: result.lastID });
+  } else {
+    const row = await db.get("SELECT id FROM users WHERE username = ?", [
+      username,
+    ]);
+  }
 });
 
 app.post("/users/login", async (req, res) => {
@@ -247,18 +248,18 @@ app.post("/users/login", async (req, res) => {
 
     if (isMatch) {
       console.log("login successful");
-      const userobj = { id: row.id, role: row.role };
-      const token = generateToken(userobj);
+      // const userobj = { id: row.id, role: row.role };
+      // const token = generateToken(userobj);
 
-      const safeUserInfo = {
-        id: row.id,
-        username: row.username,
-        role: row.role,
-      }; // added row.role. front end doesnt use it for the moment
+      // const safeUserInfo = {
+      //   id: row.id,
+      //   username: row.username,
+      //   role: row.role,
+      // }; // added row.role. front end doesnt use it for the moment
 
-      const data = { userInfo: safeUserInfo, token: token };
+      // const data = { userInfo: safeUserInfo, token: token };
 
-      return res.send(data);
+      return res.send({ success: true }); // res.send({loginsuccess: true})
     } else {
       res.status(401).json({ error: "Invalid credentials" });
     }
@@ -290,6 +291,19 @@ app.post(
     const mission_status = "draft";
 
     try {
+      const exists_already = await db.get(
+        //holds undefined if doesnt exist
+        "SELECT id FROM missions WHERE mission_title = ?",
+        [mission_title],
+      );
+
+      if (exists_already) {
+        return res.send({
+          msg: "Mission title is already taken",
+          id: exists_already.id,
+        });
+      }
+
       const result = await db.run(
         `INSERT OR IGNORE INTO missions (mission_title, mission_desc, priority_level, status, start_time, end_time)
          VALUES (?, ?, ?, ?, ?, ?)`,
@@ -303,23 +317,13 @@ app.post(
         ],
       );
 
-      if (result.changes == 0) {
-        // Duplicate title, fetch existing ID
-        const row = await db.get(
-          "SELECT id FROM missions WHERE mission_title = ?",
-          [mission_title],
-        );
+      req.missionId = result.lastID; // now available for logAction
+      console.log(`New mission inserted with ID: ${req.missionId}`);
 
-        return res.send({ msg: "Mission title is already taken", id: row.id });
-      } else {
-        req.missionId = result.lastID; // now available for logAction
-        console.log(`New mission inserted with ID: ${req.missionId}`);
+      // addMissionJob( start_time, end_time, result.lastID); // FLAG
+      // initiateTask();
 
-        // addMissionJob( start_time, end_time, result.lastID); // FLAG
-        // initiateTask();
-
-        return res.send({ id: req.missionId });
-      }
+      return res.send({ id: req.missionId });
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
@@ -335,6 +339,9 @@ app.post(
     const missionId = req.params.missionId;
     console.log("POST /missions/" + missionId + "/personnel was called");
     const missionPersonnel = req.body;
+
+    console.log(missionId);
+    console.log(missionPersonnel);
 
     for (let person of missionPersonnel) {
       const { name, role, assignment_time, status, clearance_level } = person;
@@ -381,11 +388,6 @@ app.post(
     console.log("POST /missions/" + missionId + "/objectives was called");
     const missionObjectives = req.body;
 
-    // addMissionToFlow(missionId, missionObjectives);
-    // initiateMission();
-    // initiateObjective();
-    console.log("test after intitiate child worker");
-
     for (let objective of missionObjectives) {
       const {
         description,
@@ -423,36 +425,39 @@ app.post(
 
     console.log("POST /missions/" + missionId + "/schedule was called");
 
-    db.run(
-      `UPDATE missions SET status = 'scheduled' WHERE id = ?`,
-      [missionId],
-      function (err) {
-        if (err) {
-          return console.error(err.message);
-        }
-        console.log(`Row(s) updated: ${this.changes}`);
-      },
-    );
+    try {
+      const result = await db.run(
+        `UPDATE missions SET status = 'scheduled' WHERE id = ?`,
+        [missionId],
+      );
+      console.log(`Row(s) updated: ${result.changes}`);
 
-    db.all(
-      "SELECT * FROM objectives WHERE mission_id = ?",
-      [missionId],
-      (err, rows) => {
-        if (err) {
-          console.error("Database error:", err);
-          throw err;
-        }
-        console.log(rows);
+      res.json({
+        success: true,
+        message: `Mission ${missionId} scheduled successfully.`,
+        updated: result.changes,
+      });
+    } catch (err) {
+      console.error(err.message);
+    }
 
-        addMissionToFlow(missionId, rows);
-        initiateMission();
-        initiateObjective();
+    try {
+      const rows = await db.all(
+        "SELECT * FROM objectives WHERE mission_id = ?",
+        [missionId],
+      );
 
-        // return res.send(rows);
-      },
-    );
+      console.log("rows:");
+      console.log(rows);
 
-    return res.send("route called on start error solved?");
+      addMissionToFlow(missionId, rows);
+      initiateMission();
+      initiateObjective();
+
+      // return res.send(rows);
+    } catch (err) {
+      console.log(err.message);
+    }
   },
 );
 
@@ -481,26 +486,30 @@ app.patch("/missions/", (req, res) => {
   );
 });
 
-app.get("/missions", (req, res) => {
-  // fetch all missions
-
+app.get("/missions", async (req, res) => {
   const status = req.query.status;
-  console.log("GET /missions/" + status + "was called");
+  console.log(`GET /missions?status=${status} was called`);
 
-  db.all("SELECT * FROM missions WHERE status = ?", [status], (err, rows) => {
-    if (err) {
-      throw err;
-    }
+  try {
+    const rows = await db.all("SELECT * FROM missions WHERE status = ?", [
+      status,
+    ]);
 
     rows.forEach((row) => {
       row.id = row.id.toString();
     });
-    // console.log(rows);
-    return res.send(rows);
-  });
+
+    console.log("row contents: ");
+    console.log(rows);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database query failed" });
+  }
 });
 
-app.get("/missions/:missionId", (req, res) => {
+app.get("/missions/:missionId", async (req, res) => {
   // fetch a mission
   const missionId = req.params.missionId;
   console.log("GET /missions/" + missionId + "was called");
@@ -516,67 +525,70 @@ app.get("/missions/:missionId", (req, res) => {
   });
 });
 
-app.get("/missions/:missionId/personnel", (req, res) => {
+app.get("/missions/:missionId/personnel", async (req, res) => {
   const missionId = req.params.missionId;
   console.log("GET /missions/" + missionId + "/personnel was called");
 
-  db.all(
-    "SELECT * FROM personnel WHERE mission_id = ?",
-    [missionId],
-    (err, rows) => {
-      if (err) {
-        throw err;
-      }
+  try {
+    const rows = await db.all("SELECT * FROM personnel WHERE mission_id = ?", [
+      missionId,
+    ]);
 
-      rows.forEach((row) => {
-        row.mission_id = row.mission_id.toString();
-      });
+    rows.forEach((row) => {
+      row.mission_id = row.mission_id.toString();
+    });
 
-      return res.send(rows);
-    },
-  );
+    console.log("test  personnel:    ");
+    console.log(rows);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database query failed" });
+  }
 });
 
-app.get("/missions/:missionId/assets", (req, res) => {
+app.get("/missions/:missionId/assets", async (req, res) => {
   const missionId = req.params.missionId;
   console.log("GET /missions/" + missionId + "/assets was called");
 
-  db.all(
-    "SELECT * FROM assets WHERE mission_id = ?",
-    [missionId],
-    (err, rows) => {
-      if (err) {
-        console.error("Database error:", err);
-        throw err;
-      }
+  try {
+    const rows = await db.all("SELECT * FROM assets WHERE mission_id = ?", [
+      missionId,
+    ]);
 
-      rows.forEach((row) => {
-        row.mission_id = row.mission_id.toString();
-      });
+    rows.forEach((row) => {
+      row.mission_id = row.mission_id.toString();
+    });
 
-      return res.send(rows);
-    },
-  );
+    res.json(rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database query failed" });
+  }
 });
 
-app.get("/missions/:missionId/objectives", (req, res) => {
+app.get("/missions/:missionId/objectives", async (req, res) => {
   const missionId = req.params.missionId;
   console.log("mission id obj is " + missionId);
   console.log("GET /missions/" + missionId + "/objectives was called");
 
-  db.all(
-    "SELECT * FROM objectives WHERE mission_id = ?",
-    [missionId],
-    (err, rows) => {
-      if (err) {
-        console.error("Database error:", err);
-        throw err;
-      }
-      // console.log("objectives rows: ");
-      // console.log(rows);
-      return res.send(rows);
-    },
-  );
+  try {
+    const rows = await db.all("SELECT * FROM objectives WHERE mission_id = ?", [
+      missionId,
+    ]);
+
+    rows.forEach((row) => {
+      row.mission_id = row.mission_id.toString();
+    });
+
+    console.log(rows);
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Database query failed" });
+  }
 });
 
 app.delete("/missions/:missionId", async (req, res) => {

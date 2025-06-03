@@ -31,7 +31,7 @@ function delay(ms) {
 
 async function runInterval(interval_len, ms, num_intervals, job) {
   for (let i = 0; i < num_intervals; i++) {
-    const percentage = 20 * (i + 1);
+    const percentage = (interval_len / ms) * 100 * (i + 1);
     console.log(percentage);
     console.log(`Iteration ${i} ${job.id}`);
     await delay(interval_len); // wait for 1 second
@@ -55,8 +55,8 @@ module.exports = () => {
         console.log();
         const ms = job.data.Length || 10000; // await job.updateProgress({ percent: 50, message: 'Halfway done' });
 
-        const num_intervals = 5;
-        interval_len = ms / num_intervals;
+        const interval_len = 1000;
+        const num_intervals = ms / interval_len;
 
         await runInterval(interval_len, ms, num_intervals, job);
 

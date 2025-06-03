@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 // import "../Admin.css";
 import { useAuth } from "../contexts/AuthContext";
 
+import TwoFASetup from "./2fa-setup";
+
 interface User {
   user_name: string;
   user_id: string;
@@ -11,13 +13,27 @@ interface User {
 
 export default function LogIn({ role }) {
   const { user, setUser } = useAuth();
-  const [newusername, setNewusername] = useState("");
-  const [newpassword, setNewpassword] = useState("");
+  const [newusername, setNewusername] = useState<string>("");
+  const [newpassword, setNewpassword] = useState<string>("");
 
-  const [uname, setUname] = useState("");
-  const [pword, setPword] = useState("");
+  const [uname, setUname] = useState<string>("");
+  const [pword, setPword] = useState<string>("");
+
+  const [showPassword1, setShowPassword1] = useState<Boolean>(false);
+  const [showPassword, setShowPassword] = useState<Boolean>(false);
+
+  const [signupSuccessful, setSignupSuccessful] = useState<Boolean>(false);
+
+  const [loginSuccess, setLoginSuccess] = useState<Boolean>(false);
+
+  const [twoFASuccess, setTwoFASuccess] = useState<Boolean>(false);
+
+  const [code, setCode] = useState<string>("");
+
+  console.log("LOGIN COMPONENT CODE RAN");
 
   const sendUser = async () => {
+    console.log("TESTING TEST #^T*#T*");
     try {
       const res = await fetch("http://localhost:3000/users", {
         method: "POST",
@@ -33,6 +49,9 @@ export default function LogIn({ role }) {
       }); // issue is that role prop is capitalized
 
       if (!res.ok) throw new Error("Server error");
+
+      setSignupSuccessful(true);
+      console.log("FRICKKKK");
 
       const data = await res.json(); // parse the
       console.log("Added User: ", data); // do something with it
@@ -62,19 +81,21 @@ export default function LogIn({ role }) {
       if (res.ok) {
         console.log("Login successful:", data);
 
-        localStorage.setItem("token", data.token); // JSON.stringify was causing the token alteration problem. its not necessary and it adds extra quotes
+        // localStorage.setItem("token", data.token); // JSON.stringify was causing the token alteration problem. its not necessary and it adds extra quotes
 
-        const data2: User = {
-          user_name: data.userInfo.username,
-          role: data.userInfo.role,
-          user_id: data.userInfo.id,
-          token: data.token,
-        };
+        // const data2: User = {
+        //   user_name: data.userInfo.username,
+        //   role: data.userInfo.role,
+        //   user_id: data.userInfo.id,
+        //   token: data.token,
+        // };
 
-        console.log("logged in user:");
-        console.log(data2);
+        // console.log("logged in user:");
+        // console.log(data2);
 
-        setUser(data2);
+        // setUser(data2);
+
+        setLoginSuccess(true);
 
         return { success: true, data }; // contains userInfo + token
       } else {
@@ -89,52 +110,139 @@ export default function LogIn({ role }) {
     }
   };
 
+  async function sendCode() {
+    const res = await fetch(`http://localhost:3000/auth/2fa/verify/login`, {
+      method: "POST",
+      body: JSON.stringify({
+        user: uname,
+        token: code,
+      }),
+      headers: {
+        "X-User-ID": "12345",
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch`);
+    }
+
+    localStorage.setItem("token", data.token); // JSON.stringify was causing the token alteration problem. its not necessary and it adds extra quotes
+
+    const data2: User = {
+      user_name: data.userInfo.username,
+      role: data.userInfo.role,
+      user_id: data.userInfo.id,
+      token: data.token,
+    };
+
+    console.log("logged in user:");
+    console.log(data2);
+
+    setUser(data2);
+
+    setTwoFASuccess(true);
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    sendCode();
+    e.preventDefault();
+  }
+
   return (
     <>
       <h1>{role}</h1>
 
       <div className="doublepanel" style={styles.doublepanel}>
-        <div className="panel" style={styles.panel}>
-          <h2>Sign up</h2>
+        {signupSuccessful ? (
+          <div className="panel" style={styles.panel}>
+            <TwoFASetup NewUsernameProp={newusername}></TwoFASetup>
+          </div>
+        ) : (
+          <>
+            <div className="panel" style={styles.panel}>
+              <h2>Sign up</h2>
 
-          <p>New username:</p>
-          <input
-            className="createuname"
-            placeholder="username"
-            value={newusername}
-            onChange={(e) => setNewusername(e.target.value)}
-          ></input>
+              <p>New username:</p>
+              <input
+                className="createuname"
+                placeholder="username"
+                type="text"
+                value={newusername}
+                onChange={(e) => setNewusername(e.target.value)}
+              ></input>
 
-          <p>New password:</p>
-          <input
-            className="createpword"
-            placeholder="password"
-            value={newpassword}
-            onChange={(e) => setNewpassword(e.target.value)}
-          ></input>
-          <button onClick={() => sendUser()}>Enter</button>
-        </div>
+              <p>New password:</p>
+              <input
+                className="createpword"
+                placeholder="password"
+                type={showPassword1 ? "text" : "password"}
+                value={newpassword}
+                onChange={(e) => setNewpassword(e.target.value)}
+              ></input>
+              <button onClick={() => setShowPassword1((prev) => !prev)}>
+                Show
+              </button>
+              <button onClick={() => sendUser()}>Enter</button>
+            </div>
+          </>
+        )}
 
-        <div className="panel">
-          <h2>Log in</h2>
-          <p>Username:</p>
-          <input
-            className="createuname"
-            placeholder="username"
-            value={uname}
-            onChange={(e) => setUname(e.target.value)}
-          ></input>
-
-          <p>Password:</p>
-
-          <input
-            className="createpword"
-            placeholder="password"
-            value={pword}
-            onChange={(e) => setPword(e.target.value)}
-          ></input>
-          <button onClick={() => checkUser(uname, pword)}>Enter</button>
-        </div>
+        {loginSuccess ? (
+          twoFASuccess ? (
+            <div className="panel">2FA Successful. You are now logged in.</div>
+          ) : (
+            <div className="panel">
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="token">Enter 6-digit code:</label>
+                <input
+                  id="token"
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  maxLength={6}
+                  pattern="\d{6}"
+                  required
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                ></input>
+                <button type="submit">Verify</button>
+                {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
+              </form>
+            </div>
+          )
+        ) : (
+          <div className="panel">
+            <h2>Log in</h2>
+            <p>Username:</p>
+            <input
+              className="createuname"
+              placeholder="username"
+              value={uname}
+              onChange={(e) => setUname(e.target.value)}
+            ></input>
+            <p>Password:</p>
+            <input
+              className="createpword"
+              placeholder="password"
+              type={showPassword ? "text" : "password"}
+              value={pword}
+              onChange={(e) => setPword(e.target.value)}
+            ></input>
+            <button onClick={() => setShowPassword((prev) => !prev)}>
+              Show
+            </button>
+            <button
+              onClick={() => {
+                checkUser(uname, pword);
+              }}
+            >
+              Enter
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

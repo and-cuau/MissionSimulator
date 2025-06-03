@@ -2,20 +2,11 @@ import ObjectiveProgress from "./ObjectiveProgress";
 import { useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3000", {
-  reconnectionAttempts: 1,
-  timeout: 5000,
-});
-
-socket.on("connect", () => {
-  console.log("Connected to server");
-});
-
 type MissionProgressProps = {
-  jobId: string;
+  missionId: string;
 };
 
-export default function MissionProgress() {
+export default function MissionProgress({ missionId }: MissionProgressProps) {
   //{ jobId }: MissionProgressProps
 
   const [jobId, setJobId] = useState<number>(1);
@@ -24,34 +15,46 @@ export default function MissionProgress() {
 
   const [progress, setProgress] = useState<number>(1);
   useEffect(() => {
-    console.log(`jobId is ${jobId}`);
-    socket.emit("subscribeToJob", jobId);
+    const socket = io("http://localhost:3000", {
+      reconnectionAttempts: 1,
+      timeout: 5000,
+    });
 
-    socket.on(`job-progress-${jobId}`, (data) => {
+    socket.on("connect", () => {
+      console.log("Connected to server");
+    });
+
+    const combinedId = missionId + "-" + jobId;
+    console.log(`jobId is ${combinedId}`);
+    socket.emit("subscribeToJob", combinedId);
+
+    socket.on(`job-progress-${combinedId}`, (data) => {
       console.log("test received progress update");
       console.log("updated  data.percent" + data.percent);
       setProgress(data.percent);
       setProgresses([...progresses, data.percent]);
       console.log("updated progress test " + progress);
-      if (data.jobId === jobId) {
+      if (data.jobId === combinedId) {
       }
     });
 
-    socket.on(`job-complete-${jobId}`, async (data) => {
+    socket.on(`job-complete-${combinedId}`, async (data) => {
       setJobId((prev) => prev + 1);
     });
 
     return () => {
-      socket.off(`job-progress-${jobId}`);
-      socket.off(`job-complete-${jobId}`);
+      socket.off(`job-progress-${combinedId}`);
+      socket.off(`job-complete-${combinedId}`);
     };
   }, [jobId]);
 
   return (
     <>
-      {progresses.map((progress, index) => (
-        <ObjectiveProgress progressprop={progress}></ObjectiveProgress>
-      ))}
+      <div>
+        {progresses.map((progress, index) => (
+          <ObjectiveProgress progressprop={progress}></ObjectiveProgress>
+        ))}
+      </div>
 
       {/* <button onClick={() => setJobId(prev => prev + 1)}>Test Subscribe</button> */}
     </>

@@ -24,7 +24,7 @@ function nestify(array, index = 0) {
 
 module.exports = (missionId, missionObjectives) => {
   let objectiveJobs = [];
-  let testid = 1;
+  let objectiveid = 1;
 
   console.log(missionObjectives);
 
@@ -42,13 +42,19 @@ module.exports = (missionId, missionObjectives) => {
 
     console.log("est duration" + est_duration);
 
+    combinedid = missionId + "-" + objectiveid;
+
     const newObj = {
       name: description,
       queueName: "objectives",
 
-      data: { jobId: testid, description: description, Length: est_duration },
+      data: {
+        jobId: objectiveid,
+        description: description,
+        Length: est_duration,
+      },
       opts: {
-        jobId: testid,
+        jobId: combinedid,
         attempts: 1,
         removeOnComplete: true,
         removeOnFail: true,
@@ -56,7 +62,7 @@ module.exports = (missionId, missionObjectives) => {
       children: null,
     };
     objectiveJobs.push(newObj); // parseInt("42", 10);
-    testid++;
+    objectiveid++;
   });
 
   // console.log(objectiveJobs);

@@ -7,6 +7,7 @@ import Assets from "./Assets";
 import Objectives from "./Objectives";
 import ObjectiveProgress from "./ObjectiveProgress";
 import MultiMissionProgress from "./MultiMissionProgress";
+import MissionProgress from "./MissionProgress";
 
 import { useAuth } from "../contexts/AuthContext";
 
@@ -28,6 +29,7 @@ interface Person {
   assignment_time: string;
   status: string;
   clearance_level: string;
+  [key: string]: string;
 }
 
 interface Asset {
@@ -36,6 +38,7 @@ interface Asset {
   status: string;
   location: string;
   capabilities: string;
+  [key: string]: string;
 }
 
 interface Objective {
@@ -46,6 +49,7 @@ interface Objective {
   est_duration: string;
   start_time: string;
   end_time: string;
+  [key: string]: string;
 }
 
 export default function Dashboard() {
@@ -53,6 +57,10 @@ export default function Dashboard() {
   const { user, setUser } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [scheduledMissions, setScheduledMissions] = useState<Mission[]>([]);
+
+  const [formPersonnel, setFormPersonnel] = useState<Person[]>([]);
+  const [formAssets, setFormAssets] = useState<Asset[]>([]);
+  const [formObjectives, setFormObjectives] = useState<Objective[]>([]);
 
   const [personnel, setPersonnel] = useState<Person[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -87,7 +95,9 @@ export default function Dashboard() {
     };
   }, []); // Empty dependency array
 
-  function fetchMissionData(id: string) {
+  function fetchMissionData(id: string | null) {
+    console.log("mission fetched id: ");
+    console.log(id);
     (async () => {
       try {
         await getMissionPersonnel(id ?? "0");
@@ -116,11 +126,16 @@ export default function Dashboard() {
   async function getMissions(status: string): Promise<Mission[]> {
     const res = await fetch(`http://localhost:3000/missions/?status=${status}`); // /${id}
 
+    console.log("getMissions RAN. Status is " + status);
+
     if (!res.ok) {
       // throw new Error(`Failed to fetch mission ${id}`);
     }
 
     const raw = await res.json();
+
+    console.log("raw");
+    console.log(raw);
 
     const data: Mission[] = raw;
 
@@ -153,7 +168,7 @@ export default function Dashboard() {
     return data;
   }
 
-  async function getMissionPersonnel(id: string): Promise<Person[]> {
+  async function getMissionPersonnel(id: string | null): Promise<Person[]> {
     const res = await fetch(`http://localhost:3000/missions/${id}/personnel`); // /${id}
 
     if (!res.ok) {
@@ -180,7 +195,7 @@ export default function Dashboard() {
     return data;
   }
 
-  async function getMissionAssets(id: string): Promise<Asset[]> {
+  async function getMissionAssets(id: string | null): Promise<Asset[]> {
     const res = await fetch(`http://localhost:3000/missions/${id}/assets`); // /${id}
 
     if (!res.ok) {
@@ -206,7 +221,7 @@ export default function Dashboard() {
     return data;
   }
 
-  async function getMissionObjectives(id: string): Promise<Objective[]> {
+  async function getMissionObjectives(id: string | null): Promise<Objective[]> {
     const res = await fetch(`http://localhost:3000/missions/${id}/objectives`); // /${id}
 
     if (!res.ok) {
@@ -269,7 +284,14 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("Server error");
 
       const data = await res.json(); // parse the
-      console.log("Mission started: ", data); // do something with it
+      // console.log("Mission started: ", data); // do something with it
+
+      console.log(data);
+
+      const status = "draft";
+      await getMissions("draft");
+
+      await getMissions("scheduled");
 
       return true;
     } catch (err) {
@@ -277,6 +299,141 @@ export default function Dashboard() {
       return false;
     }
   };
+
+  const sendMissionInfo = async (obj: Record<string, string>) => {
+    console.log("SEND MISSION RAN");
+    const response = await fetch(`http://localhost:3000/missions`, {
+      method: "POST",
+      body: JSON.stringify(obj),
+      headers: {
+        "X-User-ID": "12345",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+    });
+
+    // const result = await response.text();
+    const result = await response.json();
+    console.log("response from server after posting mission: ");
+    console.log(result);
+    setMissionId(result.id);
+
+    await getMissions("draft");
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    // await fetchMissionData(result.id);
+  };
+
+  const sendAssets = async (obj: Asset[]) => {
+    console.log("SEND ASSETS RAN");
+
+    console.log(obj);
+
+    const response = await fetch(
+      `http://localhost:3000/missions/${missionId}/assets`,
+      {
+        method: "POST",
+        body: JSON.stringify(obj),
+        headers: {
+          "X-User-ID": "12345",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      },
+    );
+
+    const result = await response.text();
+    console.log(result);
+  };
+
+  const sendPersonnel = async (obj: Person[]) => {
+    console.log("SEND PERSONNEL RAN");
+
+    const response = await fetch(
+      `http://localhost:3000/missions/${missionId}/personnel`,
+      {
+        method: "POST",
+        body: JSON.stringify(obj),
+        headers: {
+          "X-User-ID": "12345",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      },
+    );
+
+    const result = await response.text();
+    console.log(result);
+  };
+
+  const sendObjectives = async (obj: Objective[]) => {
+    console.log("SEND OBJECTIVES RAN");
+    const response = await fetch(
+      `http://localhost:3000/missions/${missionId}/objectives`,
+      {
+        method: "POST",
+        body: JSON.stringify(obj),
+        headers: {
+          "X-User-ID": "12345",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
+        },
+      },
+    );
+
+    const result = await response.text();
+    console.log(result);
+  };
+
+  const MissionInfoRef = useRef<HTMLFormElement>(null);
+  const PersonnelRef = useRef(null);
+  const AssetsRef = useRef(null);
+  const ObjectivesRef = useRef(null);
+
+  const handleMasterSubmit = async () => {
+    if (MissionInfoRef.current) {
+      const formData = new FormData(MissionInfoRef.current);
+      const dataObj: Record<string, string> = {};
+      formData.forEach((value, key) => {
+        dataObj[key] = value.toString();
+      });
+      // console.log("Form A Data:", dataObj);
+
+      await sendMissionInfo(dataObj);
+    }
+  };
+
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false; // Skip the first run
+    } else {
+      (async () => {
+        try {
+          await sendAssets(formAssets);
+        } catch (err) {
+          console.error("Failed to fetch mission in useEffect:", err);
+        }
+      })();
+
+      (async () => {
+        try {
+          await sendPersonnel(formPersonnel);
+        } catch (err) {
+          console.error("Failed to fetch mission in useEffect:", err);
+        }
+      })();
+
+      (async () => {
+        try {
+          await sendObjectives(formObjectives);
+        } catch (err) {
+          console.error("Failed to fetch mission in useEffect:", err);
+        }
+      })();
+    }
+  }, [missionId]);
 
   // user?.user_name will render as blank if user is null
   return (
@@ -289,23 +446,182 @@ export default function Dashboard() {
       <div style={styles.dash}>
         <div>
           <MissionInfo
-            get={getMissions}
+            getMissions={getMissions}
+            fetchMissionData={fetchMissionData}
             setMissions={setMissions}
+            ref={MissionInfoRef}
           ></MissionInfo>
-          <Personnel></Personnel>
+          <Personnel
+            personnel={formPersonnel}
+            setPersonnel={setFormPersonnel}
+            ref={PersonnelRef}
+          ></Personnel>
         </div>
 
         <div>
-          <Assets></Assets>
-          <Objectives></Objectives>
+          <Assets
+            assets={formAssets}
+            setAssets={setFormAssets}
+            ref={AssetsRef}
+          ></Assets>
+          <Objectives
+            objectives={formObjectives}
+            setObjectives={setFormObjectives}
+            ref={ObjectivesRef}
+          ></Objectives>
         </div>
+        <button onClick={() => handleMasterSubmit()}>Submit</button>
         <div style={styles.spacer}></div>
 
         <div style={styles.missiondetails}>
           <div style={styles.listcontainer1}>
             <ul>
               {missions.map((mission, index) => (
-                <li key={index}>
+                <div style={styles.testcontainer}>
+                  <li key={index}>
+                    <div style={styles.entry_element}>
+                      {mission.id + " " + mission.mission_title}
+                    </div>
+                    <div style={styles.entry_element}>
+                      {mission.mission_desc}
+                    </div>
+                    <div style={styles.entry_element}>
+                      {mission.priority_level}
+                    </div>
+                    <div style={styles.entry_element}>{mission.start_time}</div>
+                    <div style={styles.entry_element}>{mission.end_time}</div>
+                    <div style={styles.buttons}>
+                      <button
+                        onClick={() => {
+                          // setMissionId(mission.id);
+                          fetchMissionData(mission.id);
+                        }}
+                      >
+                        View
+                      </button>
+                      <button onClick={() => deleteMission(mission.id)}>
+                        Delete
+                      </button>
+                      <button onClick={() => scheduleMission(mission.id)}>
+                        Schedule
+                      </button>
+                    </div>
+                  </li>
+                </div>
+              ))}
+            </ul>
+          </div>
+          <>
+            <div style={styles.listcontainer}>
+              <div> Personnel</div>
+              <div style={styles.listcontainer2}>
+                <ul>
+                  {personnel.map((person, index) => (
+                    <div style={styles.testcontainer}>
+                      <li key={index}>
+                        {/* <div style={styles.entry_element}>
+                        {person.mission_id}
+                      </div> */}
+                        <div style={styles.entry_element}>
+                          <span>Name: </span>
+                          {person.name}
+                        </div>
+                        <div style={styles.entry_element}>
+                          <span>Role: </span>
+                          {person.role}
+                        </div>
+                        <div style={styles.entry_element}>
+                          {person.assignment_time}
+                        </div>
+                        <div style={styles.entry_element}>{person.status}</div>
+                        <div style={styles.entry_element}>
+                          {" "}
+                          <span>Clearance: </span>
+                          {person.clearance_level}
+                        </div>
+                      </li>
+                    </div>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div style={styles.listcontainer}>
+              <div>Assets</div>
+              <div style={styles.listcontainer2}>
+                <ul>
+                  {assets.map((asset, index) => (
+                    <div style={styles.testcontainer}>
+                      <li key={index}>
+                        {/* <div style={styles.entry_element}>{asset.mission_id}</div> */}
+                        <div style={styles.entry_element}>
+                          <span>Type: </span>
+                          {asset.asset_type}
+                        </div>
+                        <div style={styles.entry_element}>
+                          <span>Status: </span>
+                          {asset.status}
+                        </div>
+                        <div style={styles.entry_element}>
+                          <span>Location: </span>
+                          {asset.location}
+                        </div>
+                        <div style={styles.entry_element}>
+                          <span>Cap: </span>
+                          {asset.capabilities}
+                        </div>
+                      </li>
+                    </div>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div style={styles.listcontainer}>
+              <div>Objectives</div>
+              <div style={styles.listcontainer2}>
+                <ul>
+                  {objectives.map((objective, index) => (
+                    <div style={styles.testcontainer}>
+                      <li key={index} style={styles.list}>
+                        {/* <div style={styles.entry_element}><span>Mission ID: </span>{objective.mission_id}</div> */}
+                        <div style={styles.entry_element}>
+                          <span>Desc: </span>
+                          {objective.description}
+                        </div>
+                        <div style={styles.entry_element}>
+                          {objective.status}
+                        </div>
+                        <div style={styles.entry_element}>
+                          <span>Depends on: </span>
+                          {objective.depends_on}
+                        </div>
+                        <div style={styles.entry_element}>
+                          <span>Est. Duration: </span>
+                          {objective.est_duration}
+                        </div>
+                        <div style={styles.entry_element}>
+                          {objective.start_time}
+                        </div>
+                        <div style={styles.entry_element}>
+                          {objective.end_time}
+                        </div>
+                      </li>
+                    </div>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </>
+        </div>
+
+        <div style={styles.scheduled}>
+          {/* <MultiMissionProgress></MultiMissionProgress> */}
+
+          {scheduledMissions.map((mission, index) => (
+            <>
+              <div style={styles.splitgrid}>
+                <div>
                   <div style={styles.entry_element}>
                     {mission.id + " " + mission.mission_title}
                   </div>
@@ -315,91 +631,16 @@ export default function Dashboard() {
                   </div>
                   <div style={styles.entry_element}>{mission.start_time}</div>
                   <div style={styles.entry_element}>{mission.end_time}</div>
-                  <div style={styles.buttons}>
-                    <button
-                      onClick={() => {
-                        setMissionId(mission.id);
-                        fetchMissionData(mission.id);
-                      }}
-                    >
-                      View
-                    </button>
-                    <button onClick={() => deleteMission(mission.id)}>
-                      Delete
-                    </button>
-                    <button onClick={() => scheduleMission(mission.id)}>
-                      Schedule
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <>
-            <div style={styles.listcontainer}>
-              <ul>
-                {personnel.map((person, index) => (
-                  <li key={index}>
-                    <div style={styles.entry_element}>{person.mission_id}</div>
-                    <div style={styles.entry_element}>{person.name}</div>
-                    <div style={styles.entry_element}>{person.role}</div>
-                    <div style={styles.entry_element}>
-                      {person.assignment_time}
-                    </div>
-                    <div style={styles.entry_element}>{person.status}</div>
-                    <div style={styles.entry_element}>
-                      {person.clearance_level}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                  <div style={styles.buttons}></div>
+                </div>
+                <MissionProgress
+                  key={mission.id}
+                  missionId={mission.id}
+                ></MissionProgress>
+              </div>
+            </>
+          ))}
 
-            <div style={styles.listcontainer}>
-              <ul>
-                {assets.map((asset, index) => (
-                  <li key={index}>
-                    <div style={styles.entry_element}>{asset.mission_id}</div>
-                    <div style={styles.entry_element}>{asset.asset_type}</div>
-                    <div style={styles.entry_element}>{asset.status}</div>
-                    <div style={styles.entry_element}>{asset.location}</div>
-                    <div style={styles.entry_element}>{asset.capabilities}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div style={styles.listcontainer}>
-              <ul>
-                {objectives.map((objective, index) => (
-                  <li key={index} style={styles.list}>
-                    {/* <div style={styles.entry_element}><span>Mission ID: </span>{objective.mission_id}</div> */}
-                    <div style={styles.entry_element}>
-                      <span>Desc: </span>
-                      {objective.description}
-                    </div>
-                    <div style={styles.entry_element}>{objective.status}</div>
-                    <div style={styles.entry_element}>
-                      <span>Depends on: </span>
-                      {objective.depends_on}
-                    </div>
-                    <div style={styles.entry_element}>
-                      <span>Est. Duration: </span>
-                      {objective.est_duration}
-                    </div>
-                    <div style={styles.entry_element}>
-                      {objective.start_time}
-                    </div>
-                    <div style={styles.entry_element}>{objective.end_time}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
-        </div>
-
-        <div style={styles.scheduled}>
-          <MultiMissionProgress></MultiMissionProgress>
           {/* <div style={styles.scheduled_list}>
             <ul>
               {scheduledMissions.map((mission, index) => (
@@ -440,15 +681,26 @@ export default function Dashboard() {
 }
 
 const styles = {
+  testcontainer: {
+    // border: "2px solid white",
+  },
+  splitgrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+
+    height: "200px",
+
+    border: "2px solid",
+  },
   missiondetails: {
     width: "770px",
     display: "flex",
     flexDirection: "row",
-    border: "2px solid",
+    // border: "2px solid white",
   },
   list: {
     marginBottom: "10px",
-    // border: "2px solid red"
+    // border: "2px solid white"
   },
   spacer: {
     height: "15px",
@@ -492,7 +744,17 @@ const styles = {
     height: "500px",
 
     overflowY: "auto",
-    border: "2px solid red",
+    // border: "2px solid red",
+  },
+
+  listcontainer2: {
+    // display: "inline-block",
+    // verticalAlign: "top",
+    flexGrow: "1",
+    height: "500px",
+
+    overflowY: "auto",
+    // border: "2px solid red",
   },
 
   listcontainer: {
@@ -501,12 +763,13 @@ const styles = {
     width: "190px",
     height: "500px",
 
-    overflowY: "auto",
-    border: "2px solid red",
+    // overflowY: "auto",
+    // border: "2px solid red",
   },
   scheduled: {
     height: "500px",
-    border: "2px solid red",
+    // border: "2px solid red",
+    overflowY: "auto",
   },
   scheduled_list: {
     display: "inline-block",
