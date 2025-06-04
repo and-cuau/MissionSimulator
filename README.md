@@ -16,8 +16,8 @@ This application is designed to simulate launching and tracking missions as well
 - **Context**: Shares and persists user information across routes using React context.
 - **Local Storage**: Persists user information and session tokens across page refreshes using localStorage API.
 - **Dynamic Component Rendering**: Conditionally renders components based on user role and state. Renders components based on API responses.  
-- **Visual Objective Progress Tracking**: Tracks objectives completion progress visually using component with chart.js bar chart and integrated client socket listening for updates from objective tasks running on backend.
-- **Mission Execution Pipeline Simulation**: Simulates mission execution pipeline by queuing parent and children tasks for mission and associated objectives, to Redis queues via BullMQ flow. Initiates dedicated worker for parent/mission task and objectives tasks respectively.
+- **Visual Objective Progress Tracking**: Tracks objectives completion progress visually using component with chart.js bar chart and integrated client socket listening for updates from objective jobs running on backend.
+- **Mission Execution Pipeline Simulation**: Simulates mission execution pipeline by queuing parent and children jobs for mission and associated objectives, to Redis queues via BullMQ flow. Initiates dedicated worker for parent/mission task and objectives jobs respectively.
 
 
 - **Role-based JWT Authentication**: Utilizes server-generated tokens to authenticate client actions throughout login session. Users Admin, Commanders, Operators have different allowed actions.
