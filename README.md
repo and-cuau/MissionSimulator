@@ -22,6 +22,7 @@ This application is designed to simulate launching and tracking missions as well
 
 - **Role-based JWT Authentication**: Utilizes server-generated tokens to authenticate client actions throughout login session. Users Admin, Commanders, Operators have different allowed actions.
 - **Secure Password Storage**: Passwords are hashed before storage on signup. Hashed input password is compared to stored hash on login.
+- **Two-Factor Authentication**: Requires users to register 2FA on signup. Prompts user to enter 2FA time-based one-time passcode upon login.
 - **Non-Repudiation**: User actions are logged with action-specific details to prevent denial of having performed action.
 
 ## Challenges & Solutions
