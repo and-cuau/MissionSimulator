@@ -140,11 +140,11 @@ export default Personnel;
 
 const styles = {
   formcontainer: {
-    margin: "0px 0px 10px 0px",
-    // border: "2px solid red",
-    width: "350px",
-    height: "180px",
-    overflowY: "auto",
+    // margin: "0px 0px 10px 0px",
+    // // border: "2px solid red",
+    // width: "350px",
+    // height: "180px",
+    // overflowY: "auto",
   },
   entry: {
     margin: "0px 0px 10px 0px",
@@ -153,7 +153,7 @@ const styles = {
     display: "inline-block",
     margin: "0px 20px",
     // border: "2px solid white",
-    verticalAlign: "top",
+    // verticalAlign: "top",
   },
   inputcontainer: {
     display: "flex",

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense, CSSProperties } from "react";
 import "../App.css";
 
 import MissionInfo from "./MissionInfo";
@@ -511,6 +511,7 @@ export default function Dashboard() {
               ))}
             </ul>
           </div>
+
           <>
             <div style={styles.listcontainer}>
               <div> Personnel</div>
@@ -680,7 +681,7 @@ export default function Dashboard() {
   );
 }
 
-const styles = {
+const styles: { [key: string]: CSSProperties } =  {
   testcontainer: {
     // border: "2px solid white",
   },

@@ -15,10 +15,9 @@ This application is designed to simulate launching and tracking missions as well
 - **Passing Props**: Components communicate and share data through props, allowing for dynamic content rendering and a smooth user experience. For example, the main page component passes data to child components to display relevant content.
 - **Context**: Shares and persists user information across routes using React context.
 - **Local Storage**: Persists user information and session tokens across page refreshes using localStorage API.
-- **Dynamic Component Rendering**: Conditionally renders components based on user role and state. Renders components based on API responses.  
+- **Dynamic Component Rendering**: Conditionally renders components based on user role and state. Renders components based on API responses.
 - **Visual Objective Progress Tracking**: Tracks objectives completion progress visually using component with chart.js bar chart and integrated client socket listening for updates from objective jobs running on backend.
 - **Mission Execution Pipeline Simulation**: Simulates mission execution pipeline by queuing parent and children jobs for mission and associated objectives, to Redis queues via BullMQ flow. Initiates dedicated worker for parent/mission task and children/objectives jobs respectively.
-
 
 - **Role-based JWT Authentication**: Utilizes server-generated tokens to authenticate client actions throughout login session. Users Admin, Commanders, Operators have different allowed actions.
 - **Secure Password Storage**: Passwords are hashed before storage on signup. Hashed input password is compared to stored hash on login.
@@ -30,8 +29,6 @@ This application is designed to simulate launching and tracking missions as well
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within eachother in order to execute sequentially. Data received from from client is not nested, but in an array.
 - **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
 - **Challenge**: Desired to track completion progress of seprate objectives via front end.
-- **Solution**: Integrated Chart.js bar chart component with Socket.io client socket configured to listen for updates from tasks running on backend. 
-
-
+- **Solution**: Integrated Chart.js bar chart component with Socket.io client socket configured to listen for updates from tasks running on backend.
 
 ## Future Improvements

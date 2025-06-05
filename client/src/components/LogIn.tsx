@@ -28,6 +28,8 @@ export default function LogIn({ role }) {
 
   const [twoFASuccess, setTwoFASuccess] = useState<Boolean>(false);
 
+  const [errMsg, setErrMessage] = useState<string>("");
+
   const [code, setCode] = useState<string>("");
 
   console.log("LOGIN COMPONENT CODE RAN");
@@ -99,6 +101,7 @@ export default function LogIn({ role }) {
 
         return { success: true, data }; // contains userInfo + token
       } else {
+        setErrMessage("Incorrect username or password.");
         console.warn("Login failed:", data.error);
         return { success: false, error: data.error };
       }
@@ -231,6 +234,9 @@ export default function LogIn({ role }) {
               value={pword}
               onChange={(e) => setPword(e.target.value)}
             ></input>
+
+            <span>{errMsg}</span>
+
             <button onClick={() => setShowPassword((prev) => !prev)}>
               Show
             </button>
