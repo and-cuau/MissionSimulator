@@ -11,7 +11,11 @@ interface User {
   token: string;
 }
 
-export default function LogIn({ role }) {
+type MissionProgressProps = {
+  role: string;
+};
+
+export default function LogIn({ role }: MissionProgressProps) {
   const { user, setUser } = useAuth();
   const [newusername, setNewusername] = useState<string>("");
   const [newpassword, setNewpassword] = useState<string>("");

@@ -393,7 +393,7 @@ app.post(
         description,
         status,
         depends_on,
-        estimated_duration,
+        est_duration,
         start_time,
         end_time,
       } = objective;
@@ -404,7 +404,7 @@ app.post(
           description,
           status,
           depends_on,
-          estimated_duration,
+          est_duration,
           start_time,
           end_time,
         ],

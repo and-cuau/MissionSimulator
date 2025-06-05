@@ -7,11 +7,14 @@ interface Objective {
   description: string;
   status: string;
   depends_on: string;
-  estimated_duration: string;
+  est_duration: string;
   start_time: string;
   end_time: string;
   [key: string]: string;
 }
+
+
+
 
 interface ObjectivesProps {
   objectives: Objective[];
@@ -31,7 +34,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
         description: "",
         status: "",
         depends_on: "0",
-        estimated_duration: "",
+        est_duration: "",
         start_time: "",
         end_time: "",
       };
@@ -77,7 +80,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
         description: "",
         status: "",
         depends_on: "",
-        estimated_duration: "",
+        est_duration: "",
         start_time: "",
         end_time: "",
       };
@@ -113,9 +116,9 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
                 <div style={styles.inputcontainer}>
                   <span>Estimated Duration: </span>
                   <input
-                    name="estimated_duration"
+                    name="est_duration"
                     type="text"
-                    value={objective.estimated_duration}
+                    value={objective.est_duration}
                     onChange={(e) => handleChange(index, e)}
                   />
                 </div>
