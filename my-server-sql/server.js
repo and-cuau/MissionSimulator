@@ -7,7 +7,7 @@ const app = express();
 const authRoutes = require("./auth");
 
 const httpServer = http.createServer(app); // added to share server with websocket connections
-const PORT = 3000;
+const PORT =  process.env.PORT ||  3000;
 
 const bodyParser = require("body-parser");
 const util = require("util");
