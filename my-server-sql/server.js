@@ -122,6 +122,35 @@ db.run(`CREATE TABLE IF NOT EXISTS audit_logs (
   user_agent TEXT
 )`);
 
+module.exports = db;
+
+// Promisify db methods
+db.get = util.promisify(db.get); // uncommented promisify routes to get login/signup wokring. doesnt seem to affect/break other routes so far
+
+const originalRun = db.run;
+
+db.run = function (sql, params = []) {
+  return new Promise((resolve, reject) => {
+    originalRun.call(this, sql, params, function (err) {
+      if (err) return reject(err);
+      resolve(this);
+    });
+  });
+};
+
+const originalAll = db.all;
+
+db.all = function (sql, params = []) {
+  return new Promise((resolve, reject) => {
+    originalAll.call(this, sql, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+};
+
+
+
 return db;
 }
 
@@ -202,32 +231,7 @@ app.use("/auth", authRoutes);
 //   user_agent TEXT
 // )`);
 
-module.exports = db;
 
-// Promisify db methods
-db.get = util.promisify(db.get); // uncommented promisify routes to get login/signup wokring. doesnt seem to affect/break other routes so far
-
-const originalRun = db.run;
-
-db.run = function (sql, params = []) {
-  return new Promise((resolve, reject) => {
-    originalRun.call(this, sql, params, function (err) {
-      if (err) return reject(err);
-      resolve(this);
-    });
-  });
-};
-
-const originalAll = db.all;
-
-db.all = function (sql, params = []) {
-  return new Promise((resolve, reject) => {
-    originalAll.call(this, sql, params, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-};
 
 // Root route
 app.get("/", (req, res) => {
