@@ -11,7 +11,7 @@ const PORT =  process.env.PORT ||  3000;
 
 const bodyParser = require("body-parser");
 const util = require("util");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken"); //  JWWWTTTTTT
 const logAction = require("./logaction");
 
