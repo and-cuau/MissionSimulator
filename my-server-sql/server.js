@@ -51,8 +51,20 @@ function authorizeRoles(...allowedRoles) {
   };
 }
 
-const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database("./storage.db");
+const sqlite3 = require('better-sqlite3-wasm').verbose();  // was "sqlite3"
+
+let db;
+
+(async () => {
+  db = await sqlite3('file:storage.db', {
+    wasmUrl: 'https://cdn.jsdelivr.net/npm/better-sqlite3-wasm/better-sqlite3.wasm',
+  });
+})();
+
+
+
+
+// const db = new sqlite3.Database("./storage.db");
 const cors = require("cors");
 
 app.use(cors());
