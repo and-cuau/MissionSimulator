@@ -55,14 +55,14 @@ function authorizeRoles(...allowedRoles) {
 
 const initSqlJs = require('sql.js');
 
-
+let db;
 
 (async () => {
   // Initialize the SQL.js library
   const SQL = await initSqlJs();
 
   // Create a new database
-  const db = new SQL.Database();
+  db = new SQL.Database();
 })();
 
 
