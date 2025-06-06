@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 
 type ChildProps = {
   NewUsernameProp: string;
@@ -7,7 +6,7 @@ type ChildProps = {
 
 const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
   const [code, setCode] = useState<string>("");
-  const [error, setError] = useState("");
+  const [error] = useState(""); // deleted setError
   const [success, setSuccess] = useState<Boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>("");
 
@@ -19,7 +18,7 @@ const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
   async function getQR() {
     console.log("2fa setup prop:");
     console.log(NewUsernameProp);
-    const user = "andre";
+    // const user = "andre";
     console.log("getQR ran");
     const res = await fetch(
       `http://localhost:3000/auth/2fa/setup?user=${NewUsernameProp}`,

@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -8,8 +8,8 @@ import {
   Tooltip,
 } from "chart.js";
 
-import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
+import { useEffect } from "react";
+// import { io } from "socket.io-client";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
@@ -20,7 +20,7 @@ type MissionProgressProps = {
 export default function ObjectiveProgress({
   progressprop,
 }: MissionProgressProps) {
-  const [progress, setProgress] = useState<number>(12);
+  // const [progress, setProgress] = useState<number>(12);
 
   // function connectToServer() {
   //   const jobId = 1;

@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, forwardRef } from "react";
+import React, { useEffect, forwardRef, CSSProperties } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import Dropdown from "./Dropdown";
+// import Dropdown from "./Dropdown";
 
 interface Asset {
   mission_id: string;
@@ -18,8 +18,8 @@ interface AssetsProps {
 
 const Assets = forwardRef<HTMLFormElement, AssetsProps>(
   ({ assets, setAssets }, ref) => {
-    const { missionId, setMissionId } = useAuth();
-    const { user, setUser } = useAuth();
+    const { missionId } = useAuth();
+    const { user } = useAuth();
     // const [assets, setAssets] = useState<Asset[]>([]);
 
     useEffect(() => {
@@ -155,7 +155,7 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
 
 export default Assets;
 
-const styles = {
+const styles: { [key: string]: CSSProperties } =  {
   formcontainer: {
     margin: "0px 0px 10px 0px",
     // border: "2px solid red",

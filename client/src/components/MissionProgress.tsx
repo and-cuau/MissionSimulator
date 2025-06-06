@@ -1,5 +1,5 @@
 import ObjectiveProgress from "./ObjectiveProgress";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
 type MissionProgressProps = {
@@ -38,7 +38,7 @@ export default function MissionProgress({ missionId }: MissionProgressProps) {
       }
     });
 
-    socket.on(`job-complete-${combinedId}`, async (data) => {
+    socket.on(`job-complete-${combinedId}`, async () => { // deleted "data" parameter
       setJobId((prev) => prev + 1);
     });
 
@@ -51,7 +51,7 @@ export default function MissionProgress({ missionId }: MissionProgressProps) {
   return (
     <>
       <div>
-        {progresses.map((progress, index) => (
+        {progresses.map((progress) => (  // got rid of index n (progress, index)
           <ObjectiveProgress progressprop={progress}></ObjectiveProgress>
         ))}
       </div>

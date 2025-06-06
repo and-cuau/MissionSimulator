@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 // import "../Admin.css";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -16,7 +16,7 @@ type MissionProgressProps = {
 };
 
 export default function LogIn({ role }: MissionProgressProps) {
-  const { user, setUser } = useAuth();
+  const { setUser } = useAuth();
   const [newusername, setNewusername] = useState<string>("");
   const [newpassword, setNewpassword] = useState<string>("");
 

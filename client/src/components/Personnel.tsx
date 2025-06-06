@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, forwardRef } from "react";
+import React, { useEffect, forwardRef } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import Dropdown from "./Dropdown";
+// import Dropdown from "./Dropdown";
 
 interface Person {
   mission_id: string;
@@ -19,8 +19,8 @@ interface PersonnelProps {
 
 const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
   ({ personnel, setPersonnel }, ref) => {
-    const { missionId, setMissionId } = useAuth();
-    const { user, setUser } = useAuth();
+    const { missionId} = useAuth();
+    const { user} = useAuth();
 
     // const [personnel, setPersonnel] = useState<Person[]>([]);
 

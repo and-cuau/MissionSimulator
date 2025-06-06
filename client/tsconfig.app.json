@@ -17,10 +17,11 @@
 
     /* Linting */
     "strict": true,
-    "noUnusedLocals": true,
+    "noUnusedLocals": true,  // was set to true originally
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"]
 }
+//cat tsconfig.app.json | grep noUnusedLocals

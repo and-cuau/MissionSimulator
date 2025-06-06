@@ -1,45 +1,43 @@
-import React, {
+import {
   useState,
-  useRef,
   useEffect,
   forwardRef,
-  useImperativeHandle,
 } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import Dropdown from "./Dropdown";
+// import { useAuth } from "../contexts/AuthContext";
+// import Dropdown from "./Dropdown";
 
-interface Mission {
-  id: string;
-  mission_title: string;
-  mission_desc: string;
-  priority_level: string;
-  status: string;
-  start_time: string;
-  end_time: string;
-  // Add more fields as needed
-}
+// interface Mission {
+//   id: string;
+//   mission_title: string;
+//   mission_desc: string;
+//   priority_level: string;
+//   status: string;
+//   start_time: string;
+//   end_time: string;
+//   // Add more fields as needed
+// }
 
-type MissionInfoProps = {
-  getMissions: (status: string) => void;
-  fetchMissionData: (id: string) => void;
-  setMissions: React.Dispatch<React.SetStateAction<Mission[]>>;
-};
+// type MissionInfoProps = {
+//   getMissions: (status: string) => void;
+//   fetchMissionData: (id: string) => void;
+//   setMissions: React.Dispatch<React.SetStateAction<Mission[]>>;
+// };
 
-type MissionInfoRef = {
-  ref: HTMLFormElement;
-};
+// type MissionInfoRef = {
+//   ref: HTMLFormElement;
+// };
 
 // export default function MissionInfo({
 //   getMissions,
 //   fetchMissionData,
 // }: MissionInfoProps) {
 
-const MissionInfo = forwardRef<HTMLFormElement, MissionInfoProps>(
-  ({ getMissions, fetchMissionData, setMissions }, ref) => {
+const MissionInfo = forwardRef<HTMLFormElement>(
+   (_, ref) => {
     console.log("mission info child rendered");
 
-    const { user, setUser } = useAuth();
-    const { missionId, setMissionId } = useAuth();
+    // const { user, setUser } = useAuth();
+    // const { missionId, setMissionId } = useAuth();
     // const formRef = useRef<HTMLFormElement | null>(null);
 
     const [dateTime, setDateTime] = useState("");
@@ -82,38 +80,38 @@ const MissionInfo = forwardRef<HTMLFormElement, MissionInfoProps>(
     //   }
     // };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
+    // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    //   e.preventDefault();
 
-      if (!ref.current) return;
+    //   if (!ref.current) return;
 
-      const formData = new FormData(ref.current);
-      const plainObject = Object.fromEntries(formData.entries());
+    //   const formData = new FormData(ref.current);
+    //   const plainObject = Object.fromEntries(formData.entries());
 
-      console.log("plain object:");
-      console.log(plainObject);
+    //   console.log("plain object:");
+    //   console.log(plainObject);
 
-      const response = await fetch(`http://localhost:3000/missions`, {
-        method: "POST",
-        body: JSON.stringify(plainObject),
-        headers: {
-          "X-User-ID": "12345",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-        },
-      });
+    //   const response = await fetch(`http://localhost:3000/missions`, {
+    //     method: "POST",
+    //     body: JSON.stringify(plainObject),
+    //     headers: {
+    //       "X-User-ID": "12345",
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${user?.token}`,
+    //     },
+    //   });
 
-      // const result = await response.text();
-      const result = await response.json();
-      console.log("response from server after posting mission: ");
-      console.log(result);
-      setMissionId(result.id);
+    //   // const result = await response.text();
+    //   const result = await response.json();
+    //   console.log("response from server after posting mission: ");
+    //   console.log(result);
+    //   setMissionId(result.id);
 
-      await getMissions("draft");
-      // await fetchMissionData(result.id);
-    };
+    //   await getMissions("draft");
+    //   // await fetchMissionData(result.id);
+    // };
 
-    const [input, setInput] = useState("");
+    // const [input, setInput] = useState("");
 
     return (
       <>
@@ -121,7 +119,6 @@ const MissionInfo = forwardRef<HTMLFormElement, MissionInfoProps>(
           method="POST"
           style={styles.sectioncontainer}
           ref={ref}
-          onSubmit={handleSubmit}
         >
           <h2>Mission Info</h2>
           <div style={styles.inputcontainer}>

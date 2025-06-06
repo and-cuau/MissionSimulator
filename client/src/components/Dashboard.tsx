@@ -1,12 +1,11 @@
-import { useEffect, useRef, useState, Suspense, CSSProperties } from "react";
+import { useEffect, useRef, useState, CSSProperties } from "react";  // removed suspense
 import "../App.css";
 
 import MissionInfo from "./MissionInfo";
 import Personnel from "./Personnel";
 import Assets from "./Assets";
 import Objectives from "./Objectives";
-import ObjectiveProgress from "./ObjectiveProgress";
-import MultiMissionProgress from "./MultiMissionProgress";
+// import ObjectiveProgress from "./ObjectiveProgress";
 import MissionProgress from "./MissionProgress";
 
 import { useAuth } from "../contexts/AuthContext";
@@ -54,7 +53,7 @@ interface Objective {
 
 export default function Dashboard() {
   const { missionId, setMissionId } = useAuth();
-  const { user, setUser } = useAuth();
+  const { user } = useAuth();
   const [missions, setMissions] = useState<Mission[]>([]);
   const [scheduledMissions, setScheduledMissions] = useState<Mission[]>([]);
 
@@ -69,7 +68,7 @@ export default function Dashboard() {
   useEffect(() => {
     console.log("Component mounted");
 
-    const id = "1";
+    // const id = "1";
 
     (async () => {
       try {
@@ -288,7 +287,7 @@ export default function Dashboard() {
 
       console.log(data);
 
-      const status = "draft";
+      // const status = "draft";
       await getMissions("draft");
 
       await getMissions("scheduled");
@@ -446,9 +445,6 @@ export default function Dashboard() {
       <div style={styles.dash}>
         <div>
           <MissionInfo
-            getMissions={getMissions}
-            fetchMissionData={fetchMissionData}
-            setMissions={setMissions}
             ref={MissionInfoRef}
           ></MissionInfo>
           <Personnel
@@ -619,7 +615,7 @@ export default function Dashboard() {
         <div style={styles.scheduled}>
           {/* <MultiMissionProgress></MultiMissionProgress> */}
 
-          {scheduledMissions.map((mission, index) => (
+          {scheduledMissions.map((mission) => ( // got rid of index
             <>
               <div style={styles.splitgrid}>
                 <div>

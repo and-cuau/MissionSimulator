@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect, forwardRef } from "react";
+import React, { useEffect, forwardRef, CSSProperties } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import Dropdown from "./Dropdown";
+// import Dropdown from "./Dropdown";
 
 interface Objective {
   mission_id: string;
@@ -14,8 +14,6 @@ interface Objective {
 }
 
 
-
-
 interface ObjectivesProps {
   objectives: Objective[];
   setObjectives: React.Dispatch<React.SetStateAction<Objective[]>>;
@@ -23,8 +21,8 @@ interface ObjectivesProps {
 
 const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
   ({ objectives, setObjectives }, ref) => {
-    const { missionId, setMissionId } = useAuth();
-    const { user, setUser } = useAuth();
+    const { missionId} = useAuth();
+    const { user } = useAuth();
 
     // const [objectives, setObjectives] = useState<Objective[]>([]);
 
@@ -156,7 +154,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
 
 export default Objectives;
 
-const styles = {
+const styles: { [key: string]: CSSProperties } =  {
   formcontainer: {
     margin: "0px 0px 10px 0px",
     // border: "2px solid red",
