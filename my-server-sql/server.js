@@ -57,30 +57,15 @@ const initSqlJs = require('sql.js');
 
 let db;
 
-(async () => {
+async function initDB() {
   // Initialize the SQL.js library
   const SQL = await initSqlJs();
 
   // Create a new database
   db = new SQL.Database();
-})();
 
 
-
-// const db = new sqlite3.Database("./storage.db");
-const cors = require("cors");
-
-app.use(cors());
-app.use(express.json()); // imprtant for reading req body ! Modern, built-in way
-app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  req.db = db; // now req.db is available in routes
-  next();
-});
-
-app.use("/auth", authRoutes);
-
+  
 db.run(`CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT NOT NULL UNIQUE,
@@ -136,6 +121,86 @@ db.run(`CREATE TABLE IF NOT EXISTS audit_logs (
   ip_address TEXT,
   user_agent TEXT
 )`);
+
+return db;
+}
+
+initDB().then(() => {
+  console.log('Database initialized and tables created.');
+  // Now you can safely start your server or routes
+});
+
+
+
+// const db = new sqlite3.Database("./storage.db");
+const cors = require("cors");
+
+app.use(cors());
+app.use(express.json()); // imprtant for reading req body ! Modern, built-in way
+app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  req.db = db; // now req.db is available in routes
+  next();
+});
+
+app.use("/auth", authRoutes);
+
+// db.run(`CREATE TABLE IF NOT EXISTS users (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   username TEXT NOT NULL UNIQUE,
+//   password TEXT NOT NULL,
+//   role TEXT NOT NULL,
+//   twofa_enabled BOOLEAN,
+//   twofa_secret TEXT
+// )`);
+// db.run(`CREATE TABLE IF NOT EXISTS missions (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   mission_title TEXT NOT NULL UNIQUE,
+//   mission_desc TEXT NOT NULL,
+//   priority_level TEXT NOT NULL,
+//   status TEXT NOT NULL,
+//   start_time DATETIME NOT NULL,
+//   end_time DATETIME NOT NULL,
+//   CHECK (end_time > start_time)
+// )`);
+// // Create table if it doesn't exist
+// db.run(`CREATE TABLE IF NOT EXISTS personnel (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     mission_id INTEGER NOT NULL,
+//     name TEXT NOT NULL,
+//     role TEXT NOT NULL,
+//     assignment_time DATETIME NOT NULL,
+//     status TEXT NOT NULL,
+//     clearance_level TEXT NOT NULL
+// )`);
+// db.run(`CREATE TABLE IF NOT EXISTS assets (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   mission_id INTEGER NOT NULL,
+//   asset_type TEXT NOT NULL,
+//   status TEXT NOT NULL,
+//   location TEXT NOT NULL,
+//   capabilities TEXT NOT NULL
+// )`);
+// db.run(`CREATE TABLE IF NOT EXISTS objectives (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   mission_id INTEGER NOT NULL,
+//   description TEXT NOT NULL,
+//   status TEXT NOT NULL,
+//   depends_on TEXT NOT NULL,
+//   est_duration TEXT NOT NULL,
+//   start_time DATETIME NOT NULL,
+//   end_time DATETIME NOT NULL
+// )`);
+// db.run(`CREATE TABLE IF NOT EXISTS audit_logs (
+//   id INTEGER PRIMARY KEY AUTOINCREMENT,
+//   user_id INTEGER NOT NULL,
+//   action TEXT NOT NULL,
+//   target_id INTEGER,
+//   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+//   ip_address TEXT,
+//   user_agent TEXT
+// )`);
 
 module.exports = db;
 
