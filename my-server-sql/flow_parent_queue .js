@@ -6,6 +6,7 @@ const IORedis = require("ioredis");
 
 const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
+  family: 0, // This enables IPv6 (and IPv4 fallback) to work with Railway
 });
 
 
