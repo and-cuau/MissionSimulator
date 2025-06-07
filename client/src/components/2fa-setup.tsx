@@ -66,7 +66,7 @@ const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
   }
 
   useEffect(() => {
-    // getQR();
+     getQR();
 
     // Optional cleanup function (like componentWillUnmount)
     return () => {
@@ -81,7 +81,7 @@ const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
       ) : (
         <>
           <img src={imageUrl}></img>
-          <button onClick={() => getQR()}>Test</button>
+          {/* <button onClick={() => getQR()}>Test</button> */}
 
           <form onSubmit={handleSubmit}>
             <label htmlFor="token">Enter 6-digit code:</label>
