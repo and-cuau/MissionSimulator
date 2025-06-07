@@ -189,7 +189,12 @@ module.exports = pool; // ?? was = db
 // const db = new sqlite3.Database("./storage.db");
 const cors = require("cors");
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || '*', // Replace with actual frontend URL if needed
+  credentials: true,
+}));
+
+
 app.use(express.json()); // imprtant for reading req body ! Modern, built-in way
 app.use(express.urlencoded({ extended: true }));
 
