@@ -55,9 +55,8 @@ const API_URL = process.env.REACT_APP_API_URL;
 // const API_URL = "http://localhost:3000";
 console.log("REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
 
-const TEST_VAR = process.env.TEST;
 // const API_URL = "http://localhost:3000";
-console.log("REACT_APP_API_URL:", process.env.TEST);
+console.log("TEST value:", process.env.TEST);
 
 
 export default function Dashboard() {
