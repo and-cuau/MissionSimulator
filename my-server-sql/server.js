@@ -63,14 +63,21 @@ function authorizeRoles(...allowedRoles) {
 
 const { Pool } = require("pg");
 
-const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "storage",
-  password: "123456",
-  port: 5432,
-});
+// const pool = new Pool({
+//   user: "postgres",
+//   host: "localhost",
+//   database: "storage",
+//   password: "123456",
+//   port: 5432,
+// });
 
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false, // Required on Railway
+  },
+});
 
 async function setupTables() {
   try{
