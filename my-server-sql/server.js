@@ -7,7 +7,7 @@ const app = express();
 const authRoutes = require("./auth");
 
 const httpServer = http.createServer(app); // added to share server with websocket connections
-const PORT =  process.env.PORT ||  3000;
+const PORT = process.env.PORT || 3000;
 
 const bodyParser = require("body-parser");
 const util = require("util");
@@ -51,115 +51,126 @@ function authorizeRoles(...allowedRoles) {
   };
 }
 
+// const initSqlJs = require('sql.js');
+// let db;
+// async function initDB() {
+// // Initialize the SQL.js library
+// const SQL = await initSqlJs();
+// // Create a new database
+// db = new SQL.Database();
 
+// PostgreSQL schema setup using pool.query
 
-const initSqlJs = require('sql.js');
+const { Pool } = require("pg");
 
-let db;
-
-async function initDB() {
-  // Initialize the SQL.js library
-  const SQL = await initSqlJs();
-
-  // Create a new database
-  db = new SQL.Database();
-
-
-  
-db.run(`CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  username TEXT NOT NULL UNIQUE,
-  password TEXT NOT NULL,
-  role TEXT NOT NULL,
-  twofa_enabled BOOLEAN,
-  twofa_secret TEXT
-)`);
-db.run(`CREATE TABLE IF NOT EXISTS missions (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_title TEXT NOT NULL UNIQUE,
-  mission_desc TEXT NOT NULL,
-  priority_level TEXT NOT NULL,
-  status TEXT NOT NULL,
-  start_time DATETIME NOT NULL,
-  end_time DATETIME NOT NULL,
-  CHECK (end_time > start_time)
-)`);
-// Create table if it doesn't exist
-db.run(`CREATE TABLE IF NOT EXISTS personnel (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    mission_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL,
-    assignment_time DATETIME NOT NULL,
-    status TEXT NOT NULL,
-    clearance_level TEXT NOT NULL
-)`);
-db.run(`CREATE TABLE IF NOT EXISTS assets (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id INTEGER NOT NULL,
-  asset_type TEXT NOT NULL,
-  status TEXT NOT NULL,
-  location TEXT NOT NULL,
-  capabilities TEXT NOT NULL
-)`);
-db.run(`CREATE TABLE IF NOT EXISTS objectives (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  mission_id INTEGER NOT NULL,
-  description TEXT NOT NULL,
-  status TEXT NOT NULL,
-  depends_on TEXT NOT NULL,
-  est_duration TEXT NOT NULL,
-  start_time DATETIME NOT NULL,
-  end_time DATETIME NOT NULL
-)`);
-db.run(`CREATE TABLE IF NOT EXISTS audit_logs (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  action TEXT NOT NULL,
-  target_id INTEGER,
-  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-  ip_address TEXT,
-  user_agent TEXT
-)`);
-
-module.exports = db;
-
-// Promisify db methods
-db.get = util.promisify(db.get); // uncommented promisify routes to get login/signup wokring. doesnt seem to affect/break other routes so far
-
-const originalRun = db.run;
-
-db.run = function (sql, params = []) {
-  return new Promise((resolve, reject) => {
-    originalRun.call(this, sql, params, function (err) {
-      if (err) return reject(err);
-      resolve(this);
-    });
-  });
-};
-
-const originalAll = db.all;
-
-db.all = function (sql, params = []) {
-  return new Promise((resolve, reject) => {
-    originalAll.call(this, sql, params, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
-  });
-};
-
-
-
-return db;
-}
-
-initDB().then(() => {
-  console.log('Database initialized and tables created.');
-  // Now you can safely start your server or routes
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "storage",
+  password: "123456",
+  port: 5432,
 });
 
 
+async function setupTables() {
+  try{
+  
+await pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL,
+    twofa_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    twofa_secret TEXT
+  )
+`,
+  )
+  .catch(console.error);
+
+await pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS missions (
+    id SERIAL PRIMARY KEY,
+    mission_title TEXT NOT NULL UNIQUE,
+    mission_desc TEXT NOT NULL,
+    priority_level TEXT NOT NULL,
+    status TEXT NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL,
+    CHECK (end_time > start_time)
+  )
+`,
+  )
+  .catch(console.error);
+
+await pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS personnel (
+    id SERIAL PRIMARY KEY,
+    mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    assignment_time TIMESTAMP NOT NULL,
+    status TEXT NOT NULL,
+    clearance_level TEXT NOT NULL
+  )
+`,
+  )
+  .catch(console.error);
+
+await pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS assets (
+    id SERIAL PRIMARY KEY,
+    mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    asset_type TEXT NOT NULL,
+    status TEXT NOT NULL,
+    location TEXT NOT NULL,
+    capabilities TEXT NOT NULL
+  )
+`,
+  )
+  .catch(console.error);
+
+await pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS objectives (
+    id SERIAL PRIMARY KEY,
+    mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+    description TEXT NOT NULL,
+    status TEXT NOT NULL,
+    depends_on TEXT NOT NULL,
+    est_duration TEXT NOT NULL,
+    start_time TIMESTAMP NOT NULL,
+    end_time TIMESTAMP NOT NULL
+  )
+`,
+  )
+  .catch(console.error);
+
+await pool
+  .query(
+    `CREATE TABLE IF NOT EXISTS audit_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    target_id INTEGER,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    ip_address TEXT,
+    user_agent TEXT
+  )
+`,
+  )
+  .catch(console.error);
+
+} catch (err) {
+    console.error("Error creating tables:", err);
+}
+
+}
+module.exports = pool; // ?? was = db
 
 // const db = new sqlite3.Database("./storage.db");
 const cors = require("cors");
@@ -169,69 +180,11 @@ app.use(express.json()); // imprtant for reading req body ! Modern, built-in way
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
-  req.db = db; // now req.db is available in routes
+  req.db = pool; // now req.db is available in routes
   next();
 });
 
 app.use("/auth", authRoutes);
-
-// db.run(`CREATE TABLE IF NOT EXISTS users (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   username TEXT NOT NULL UNIQUE,
-//   password TEXT NOT NULL,
-//   role TEXT NOT NULL,
-//   twofa_enabled BOOLEAN,
-//   twofa_secret TEXT
-// )`);
-// db.run(`CREATE TABLE IF NOT EXISTS missions (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   mission_title TEXT NOT NULL UNIQUE,
-//   mission_desc TEXT NOT NULL,
-//   priority_level TEXT NOT NULL,
-//   status TEXT NOT NULL,
-//   start_time DATETIME NOT NULL,
-//   end_time DATETIME NOT NULL,
-//   CHECK (end_time > start_time)
-// )`);
-// // Create table if it doesn't exist
-// db.run(`CREATE TABLE IF NOT EXISTS personnel (
-//     id INTEGER PRIMARY KEY AUTOINCREMENT,
-//     mission_id INTEGER NOT NULL,
-//     name TEXT NOT NULL,
-//     role TEXT NOT NULL,
-//     assignment_time DATETIME NOT NULL,
-//     status TEXT NOT NULL,
-//     clearance_level TEXT NOT NULL
-// )`);
-// db.run(`CREATE TABLE IF NOT EXISTS assets (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   mission_id INTEGER NOT NULL,
-//   asset_type TEXT NOT NULL,
-//   status TEXT NOT NULL,
-//   location TEXT NOT NULL,
-//   capabilities TEXT NOT NULL
-// )`);
-// db.run(`CREATE TABLE IF NOT EXISTS objectives (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   mission_id INTEGER NOT NULL,
-//   description TEXT NOT NULL,
-//   status TEXT NOT NULL,
-//   depends_on TEXT NOT NULL,
-//   est_duration TEXT NOT NULL,
-//   start_time DATETIME NOT NULL,
-//   end_time DATETIME NOT NULL
-// )`);
-// db.run(`CREATE TABLE IF NOT EXISTS audit_logs (
-//   id INTEGER PRIMARY KEY AUTOINCREMENT,
-//   user_id INTEGER NOT NULL,
-//   action TEXT NOT NULL,
-//   target_id INTEGER,
-//   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-//   ip_address TEXT,
-//   user_agent TEXT
-// )`);
-
-
 
 // Root route
 app.get("/", (req, res) => {
@@ -273,9 +226,18 @@ io.on("connection", (socket) => {
   });
 });
 
-httpServer.listen(PORT, () => {
+
+(async () => {
+  await setupTables();
+
+  // Start your server AFTER tables are ready
+  httpServer.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });
+
+})();
+
+
 
 app.post("/users", async (req, res) => {
   // removed async
@@ -291,19 +253,20 @@ app.post("/users", async (req, res) => {
   console.log("password: " + password);
   console.log("hash: " + hash);
 
-  const result = await db.run(
-    "INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)",
+  const result = await pool.query(
+    `INSERT INTO users (username, password, role)
+   VALUES ($1, $2, $3)
+   ON CONFLICT (username) DO NOTHING
+   RETURNING *`,
     [username, hash, role],
   );
 
-  if (result.changes > 0) {
-    console.log(`New user inserted with ID: ${result.lastID}`);
-
-    return res.send({ id: result.lastID });
+  if (result.rows.length === 0) {
+    console.log("User already exists — insert ignored");
+    return res.status(404).json({ error: "User already exists" });
   } else {
-    const row = await db.get("SELECT id FROM users WHERE username = ?", [
-      username,
-    ]);
+    console.log(`New user inserted with ID: ${result.rows[0].id}`);
+     return res.json({ error: "User already exists" });
   }
 });
 
@@ -322,26 +285,20 @@ app.post("/users/login", async (req, res) => {
 
   try {
     // Assume you fetched the user and their hashed password from DB
-    const row = await db.get("SELECT * FROM users WHERE username = ?", [
+    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
       username,
     ]);
 
-    if (!row) return res.status(404).json({ error: "User not found" });
+    const row = result.rows[0];
 
-    const isMatch = await bcrypt.compare(password, row.password); // This works fine here
+    if (!row) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const isMatch = await bcrypt.compare(password, row.password);
 
     if (isMatch) {
       console.log("login successful");
-      // const userobj = { id: row.id, role: row.role };
-      // const token = generateToken(userobj);
-
-      // const safeUserInfo = {
-      //   id: row.id,
-      //   username: row.username,
-      //   role: row.role,
-      // }; // added row.role. front end doesnt use it for the moment
-
-      // const data = { userInfo: safeUserInfo, token: token };
 
       return res.send({ success: true }); // res.send({loginsuccess: true})
     } else {
@@ -356,11 +313,10 @@ app.post(
   "/missions",
   authenticateToken,
   authorizeRoles("admin", "commander"),
-  logAction("MISSION_CREATED", (req) => req.missionId),
-  async (req, res) => {
+  async (req, res, next) => {
     console.log("POST /missions was called");
-
     console.log(req.body);
+
 
     const {
       mission_title,
@@ -370,27 +326,26 @@ app.post(
       end_time,
     } = req.body;
 
-    console.log("priority lvl:" + priority_level);
-
     const mission_status = "draft";
 
     try {
-      const exists_already = await db.get(
-        //holds undefined if doesnt exist
-        "SELECT id FROM missions WHERE mission_title = ?",
-        [mission_title],
+      const { rows: exists } = await pool.query(
+        "SELECT id FROM missions WHERE mission_title = $1",
+        [mission_title]
       );
 
-      if (exists_already) {
+      if (exists.length) {
         return res.send({
           msg: "Mission title is already taken",
-          id: exists_already.id,
+          id: exists[0].id,
         });
       }
 
-      const result = await db.run(
-        `INSERT OR IGNORE INTO missions (mission_title, mission_desc, priority_level, status, start_time, end_time)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+      const { rows } = await pool.query(
+        `INSERT INTO missions
+         (mission_title, mission_desc, priority_level, status, start_time, end_time)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING id`,
         [
           mission_title,
           mission_desc,
@@ -398,13 +353,13 @@ app.post(
           mission_status,
           start_time,
           end_time,
-        ],
+        ]
       );
 
-      req.missionId = result.lastID; // now available for logAction
+      req.missionId = rows[0].id;      
       console.log(`New mission inserted with ID: ${req.missionId}`);
 
-      // addMissionJob( start_time, end_time, result.lastID); // FLAG
+      // addMissionJob(start_time, end_time, req.missionId); // FLAG
       // initiateTask();
 
       return res.send({ id: req.missionId });
@@ -413,172 +368,190 @@ app.post(
       return res.status(500).send("Internal server error");
     }
   },
+  logAction("MISSION_CREATED", (req) => req.missionId)  
 );
+
 
 app.post(
   "/missions/:missionId/personnel",
   authenticateToken,
-  logAction("PERSON_CREATED", (req) => req.missionId),
-  async (req, res) => {
-    const missionId = req.params.missionId;
-    console.log("POST /missions/" + missionId + "/personnel was called");
-    const missionPersonnel = req.body;
+  async (req, res, next) => {
+    const missionId = req.params.missionId;     
+    console.log(`POST /missions/${missionId}/personnel was called`);
 
+    const missionPersonnel = req.body;               
     console.log(missionId);
     console.log(missionPersonnel);
 
-    for (let person of missionPersonnel) {
-      const { name, role, assignment_time, status, clearance_level } = person;
-      await db.run(
-        "INSERT OR IGNORE INTO personnel (mission_id, name, role, assignment_time, status, clearance_level) VALUES (?, ?, ?, ?, ?, ?)",
-        [missionId, name, role, assignment_time, status, clearance_level],
-      );
-    }
+    try {
+      for (const person of missionPersonnel) {
+        const { name, role, assignment_time = "2025-01-01 12:00:00", status = "ready", clearance_level } = person;
 
-    return res.send("route called on start error solved?");
+        await pool.query(
+          `INSERT INTO personnel
+           (mission_id, name, role, assignment_time, status, clearance_level)
+           VALUES ($1, $2, $3, $4, $5, $6)`,   
+          [missionId, name, role, "2025-01-01 12:00:00", "ready", clearance_level]
+        );
+      }
+
+      req.missionId = missionId;                
+      next();                                   
+    } catch (err) {
+      console.error("Database error:", err);
+      return res.status(500).send("Internal server error");
+    }
   },
+  logAction("PERSON_CREATED", (req) => req.missionId)
 );
+
 
 app.post(
   "/missions/:missionId/assets",
   authenticateToken,
-  logAction("ASSET_CREATED", (req) => req.missionId),
-  async (req, res) => {
-    const missionId = req.params.missionId;
-    console.log("POST /missions/" + missionId + "/assets was called");
-    const missionAssets = req.body;
+  async (req, res, next) => {
+    const missionId = req.params.missionId;            
+    console.log(`POST /missions/${missionId}/assets was called`);
+
+    const missionAssets = req.body;                    
     console.log(missionAssets);
-    const status = "ready";
 
-    for (let asset of missionAssets) {
-      const { missionIdUnused, asset_type, status, location, capabilities } =
-        asset;
-      await db.run(
-        "INSERT OR IGNORE INTO assets (mission_id, asset_type, status, location, capabilities) VALUES (?, ?, ?, ?, ?)",
-        [missionId, asset_type, status, location, capabilities],
-      );
+    try {
+      for (const asset of missionAssets) {
+        const { asset_type, status = "ready", location, capabilities } = asset;
+
+        await pool.query(
+          `INSERT INTO assets
+           (mission_id, asset_type, status, location, capabilities)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [missionId, asset_type, status, location, capabilities]
+        );
+      }
+
+      req.missionId = missionId;           
+      next();                                
+    } catch (err) {
+      console.error("Database error:", err);
+      return res.status(500).send("Internal server error");
     }
-
-    return res.send("route called on start error solved?");
   },
+  logAction("ASSET_CREATED", (req) => req.missionId)
 );
+
 
 app.post(
   "/missions/:missionId/objectives",
   authenticateToken,
-  logAction("OBJECTIVE_CREATED", (req) => req.missionId),
-  async (req, res) => {
+  async (req, res, next) => {
     const missionId = req.params.missionId;
-    console.log("POST /missions/" + missionId + "/objectives was called");
-    const missionObjectives = req.body;
+    console.log(`POST /missions/${missionId}/objectives was called`);
 
-    for (let objective of missionObjectives) {
-      const {
-        description,
-        status,
-        depends_on,
-        est_duration,
-        start_time,
-        end_time,
-      } = objective;
-      await db.run(
-        "INSERT OR IGNORE INTO objectives (mission_id, description, status, depends_on, est_duration, start_time, end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        [
-          missionId,
+    const missionObjectives = req.body;    
+    
+    console.log("misobjectives: ");
+    console.log(missionObjectives);
+
+    try {
+      for (const objective of missionObjectives) {
+        const {
           description,
-          status,
+          status ="ready",
           depends_on,
           est_duration,
-          start_time,
-          end_time,
-        ],
-      );
-    }
+          start_time = '2025-01-01 12:00:00',
+          end_time = '2025-01-01 12:00:00',
+        } = objective;
 
-    return res.send("route called on start error solved?");
+        await pool.query(
+          `INSERT INTO objectives
+           (mission_id, description, status, depends_on, est_duration, start_time, end_time)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `,
+          [
+            missionId,
+            description,
+            "ready",
+            depends_on,
+            est_duration,
+            '2025-01-01 12:00:00',
+            '2025-01-01 12:00:00'
+          ]
+        );
+      }
+
+      req.missionId = missionId;         
+      next();                            
+    } catch (err) {
+      console.error("Database error:", err);
+      return res.status(500).send("Internal server error");
+    }
   },
+  logAction("OBJECTIVE_CREATED", (req) => req.missionId)
 );
+
 
 app.post(
   "/missions/:missionId/schedule",
   authenticateToken,
   authorizeRoles("admin", "commander"),
-  logAction("OBJECTIVE_CREATED", (req) => req.missionId),
-  async (req, res) => {
+  async (req, res, next) => {
     const missionId = req.params.missionId;
-
-    console.log("POST /missions/" + missionId + "/schedule was called");
+    console.log(`POST /missions/${missionId}/schedule was called`);
 
     try {
-      const result = await db.run(
-        `UPDATE missions SET status = 'scheduled' WHERE id = ?`,
-        [missionId],
+  
+      const { rowCount } = await pool.query(
+        `UPDATE missions
+         SET status = 'scheduled'
+         WHERE id = $1`,
+        [missionId]
       );
-      console.log(`Row(s) updated: ${result.changes}`);
+      console.log(`Row(s) updated: ${rowCount}`);
 
       res.json({
         success: true,
         message: `Mission ${missionId} scheduled successfully.`,
-        updated: result.changes,
+        updated: rowCount,
       });
-    } catch (err) {
-      console.error(err.message);
-    }
 
-    try {
-      const rows = await db.all(
-        "SELECT * FROM objectives WHERE mission_id = ?",
-        [missionId],
+
+      const { rows: objectives } = await pool.query(
+        `SELECT * FROM objectives WHERE mission_id = $1`,
+        [missionId]
       );
+      console.log("Objectives:", objectives);
 
-      console.log("rows:");
-      console.log(rows);
+      // console.log(objectives)
 
-      addMissionToFlow(missionId, rows);
+      addMissionToFlow(missionId, objectives);
       initiateMission();
       initiateObjective();
 
-      // return res.send(rows);
+  
+      req.missionId = missionId;
+      next();                                   // run logAction
     } catch (err) {
-      console.log(err.message);
+      console.error("Database error:", err);
+      return res.status(500).send("Internal server error");
     }
   },
+  logAction("OBJECTIVE_CREATED", (req) => req.missionId)
 );
 
-app.patch("/missions/", (req, res) => {
-  console.log("PATCH /missions/ was called");
 
-  const {
-    mission_title,
-    mission_desc,
-    priority_level,
-    start_time,
-    end_time,
-    id,
-  } = req.body;
 
-  db.run(
-    `UPDATE missions SET mission_title =?, mission_desc=?, priority_level=?, start_time=?,
-     end_time=? WHERE id = ?`,
-    [mission_title, mission_desc, priority_level, start_time, end_time, id],
-    function (err) {
-      if (err) {
-        return console.error(err.message);
-      }
-      console.log(`Row(s) updated: ${this.changes}`);
-    },
-  );
-});
 
 app.get("/missions", async (req, res) => {
   const status = req.query.status;
   console.log(`GET /missions?status=${status} was called`);
 
   try {
-    const rows = await db.all("SELECT * FROM missions WHERE status = ?", [
-      status,
-    ]);
+    const { rows } = await pool.query(
+      "SELECT * FROM missions WHERE status = $1",
+      [status]
+    );
 
+ 
     rows.forEach((row) => {
       row.id = row.id.toString();
     });
@@ -594,35 +567,46 @@ app.get("/missions", async (req, res) => {
 });
 
 app.get("/missions/:missionId", async (req, res) => {
-  // fetch a mission
   const missionId = req.params.missionId;
-  console.log("GET /missions/" + missionId + "was called");
+  console.log(`GET /missions/${missionId} was called`);
 
-  db.run("SELECT * FROM missions", (err, rows) => {
-    if (err) {
-      throw err;
+  try {
+    const { rows } = await pool.query(
+      "SELECT * FROM missions WHERE id = $1",
+      [missionId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Mission not found" });
     }
 
-    row.id = row.id.toString();
+    const mission = rows[0];
+    mission.id = mission.id.toString(); // optional
 
-    return res.send(rows);
-  });
+    return res.json(mission);
+  } catch (err) {
+    console.error("Database error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
 
 app.get("/missions/:missionId/personnel", async (req, res) => {
   const missionId = req.params.missionId;
-  console.log("GET /missions/" + missionId + "/personnel was called");
+  console.log(`GET /missions/${missionId}/personnel was called`);
 
   try {
-    const rows = await db.all("SELECT * FROM personnel WHERE mission_id = ?", [
-      missionId,
-    ]);
+    const { rows } = await pool.query(
+      "SELECT * FROM personnel WHERE mission_id = $1",
+      [missionId]
+    );
 
-    rows.forEach((row) => {
+    // 
+    rows.forEach(row => {
       row.mission_id = row.mission_id.toString();
     });
 
-    console.log("test  personnel:    ");
+    console.log("test personnel:");
     console.log(rows);
 
     res.json(rows);
@@ -632,16 +616,19 @@ app.get("/missions/:missionId/personnel", async (req, res) => {
   }
 });
 
+
 app.get("/missions/:missionId/assets", async (req, res) => {
   const missionId = req.params.missionId;
-  console.log("GET /missions/" + missionId + "/assets was called");
+  console.log(`GET /missions/${missionId}/assets was called`);
 
   try {
-    const rows = await db.all("SELECT * FROM assets WHERE mission_id = ?", [
-      missionId,
-    ]);
+    const { rows } = await pool.query(
+      "SELECT * FROM assets WHERE mission_id = $1",
+      [missionId]
+    );
 
-    rows.forEach((row) => {
+    // Optional: convert mission_id to string if needed
+    rows.forEach(row => {
       row.mission_id = row.mission_id.toString();
     });
 
@@ -654,15 +641,17 @@ app.get("/missions/:missionId/assets", async (req, res) => {
 
 app.get("/missions/:missionId/objectives", async (req, res) => {
   const missionId = req.params.missionId;
-  console.log("mission id obj is " + missionId);
-  console.log("GET /missions/" + missionId + "/objectives was called");
+  console.log(`mission id obj is ${missionId}`);
+  console.log(`GET /missions/${missionId}/objectives was called`);
 
   try {
-    const rows = await db.all("SELECT * FROM objectives WHERE mission_id = ?", [
-      missionId,
-    ]);
+    const { rows } = await pool.query(
+      "SELECT * FROM objectives WHERE mission_id = $1",
+      [missionId]
+    );
 
-    rows.forEach((row) => {
+    
+    rows.forEach(row => {
       row.mission_id = row.mission_id.toString();
     });
 
@@ -677,17 +666,15 @@ app.get("/missions/:missionId/objectives", async (req, res) => {
 
 app.delete("/missions/:missionId", async (req, res) => {
   const missionId = req.params.missionId;
-  console.log("DELETE /missions/" + missionId + " was called");
+  console.log(`DELETE /missions/${missionId} was called`);
 
   try {
-    const result = await db.run("DELETE FROM missions WHERE id = ?", [
-      missionId,
-    ]);
-    // `result` depends on how you promisified it.
-    // Usually you want to access number of rows changed:
-    // e.g. result.changes or result.stmt.changes depending on implementation
+    const result = await pool.query(
+      "DELETE FROM missions WHERE id = $1",
+      [missionId]
+    );
 
-    if (result.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: "Mission not found" });
     }
 
@@ -700,14 +687,15 @@ app.delete("/missions/:missionId", async (req, res) => {
   }
 });
 
+
 async function deleteJob(jobId) {
-  // 1 ‑ look the job up in Redis
+
   const job = await myQueue.getJob(jobId);
   if (!job) {
     console.log(`No job found with ID ${jobId}`);
     return;
   }
-  // 2 ‑ remove it from whatever set (waiting, delayed, active, etc.) it’s in
+
   await job.remove();
   console.log(`Job ${jobId} deleted from queue`);
 }

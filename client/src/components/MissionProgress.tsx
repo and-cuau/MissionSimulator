@@ -38,7 +38,8 @@ export default function MissionProgress({ missionId }: MissionProgressProps) {
       }
     });
 
-    socket.on(`job-complete-${combinedId}`, async () => { // deleted "data" parameter
+    socket.on(`job-complete-${combinedId}`, async () => {
+      // deleted "data" parameter
       setJobId((prev) => prev + 1);
     });
 
@@ -51,9 +52,13 @@ export default function MissionProgress({ missionId }: MissionProgressProps) {
   return (
     <>
       <div>
-        {progresses.map((progress) => (  // got rid of index n (progress, index)
-          <ObjectiveProgress progressprop={progress}></ObjectiveProgress>
-        ))}
+        {progresses.map(
+          (
+            progress, // got rid of index n (progress, index)
+          ) => (
+            <ObjectiveProgress progressprop={progress}></ObjectiveProgress>
+          ),
+        )}
       </div>
 
       {/* <button onClick={() => setJobId(prev => prev + 1)}>Test Subscribe</button> */}

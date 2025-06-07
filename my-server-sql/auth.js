@@ -30,13 +30,13 @@ router.get("/2fa/setup", async (req, res) => {
   console.log("secret: ");
   console.log(secret.base32);
 
-  const db = req.db;
+  const pool = req.db;
 
   try {
-    await db.run(`UPDATE users SET twofa_secret = ? WHERE username = ?`, [
-      secret.base32,
-      username,
-    ]);
+    await pool.query(
+  `UPDATE users SET twofa_secret = $1 WHERE username = $2`,
+  [secret.base32, username]
+);
     // res.json({ message: "2FA enabled" });
   } catch (err) {
     console.error("DB update error:", err.message);
@@ -55,10 +55,14 @@ router.get("/2fa/setup", async (req, res) => {
 router.post("/2fa/verify/login", async (req, res) => {
   console.log("GET /2fa/verify/login was called");
   const { user, token } = req.body;
-  const db = req.db;
+  const pool = req.db;
 
   try {
-    const row = await db.get(`SELECT * FROM users WHERE username = ?`, [user]);
+    const result = await pool.query(
+  `SELECT * FROM users WHERE username = $1`,
+  [user]
+);
+const row = result.rows[0];
 
     const secret = row.twofa_secret;
 
@@ -77,9 +81,11 @@ router.post("/2fa/verify/login", async (req, res) => {
     if (verified) {
       // users[user].twoFA.enabled = true;
 
-      const row = await db.get("SELECT * FROM users WHERE username = ?", [
-        user,
-      ]);
+      const result = await pool.query(
+        "SELECT * FROM users WHERE username = $1",
+        [user]
+        );
+      const row = result.rows[0];
 
       const userobj = { id: row.id, role: row.role };
       const token = generateToken(userobj);
@@ -108,10 +114,15 @@ router.post("/2fa/verify/login", async (req, res) => {
 router.post("/2fa/verify/setup", async (req, res) => {
   console.log("GET /2fa/verify/setup was called");
   const { user, token } = req.body;
-  const db = req.db;
+  const pool = req.db;
 
   try {
-    const row = await db.get(`SELECT * FROM users WHERE username = ?`, [user]);
+    const result = await pool.query(
+  `SELECT * FROM users WHERE username = $1`,
+  [user]
+);
+const row = result.rows[0];
+
     const secret = row.twofa_secret;
 
     const verified = speakeasy.totp.verify({
@@ -122,9 +133,11 @@ router.post("/2fa/verify/setup", async (req, res) => {
     });
 
     if (verified) {
-      await db.run("UPDATE users SET twofa_enabled = 1 WHERE username = ?", [
-        user,
-      ]);
+      await pool.query(
+  "UPDATE users SET twofa_enabled = TRUE WHERE username = $1",
+  [user]
+);
+
       return res.send({ success: true });
     }
     // res.json({ message: "2FA enabled" });

@@ -13,7 +13,6 @@ interface Objective {
   [key: string]: string;
 }
 
-
 interface ObjectivesProps {
   objectives: Objective[];
   setObjectives: React.Dispatch<React.SetStateAction<Objective[]>>;
@@ -21,7 +20,7 @@ interface ObjectivesProps {
 
 const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
   ({ objectives, setObjectives }, ref) => {
-    const { missionId} = useAuth();
+    const { missionId } = useAuth();
     const { user } = useAuth();
 
     // const [objectives, setObjectives] = useState<Objective[]>([]);
@@ -154,7 +153,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
 
 export default Objectives;
 
-const styles: { [key: string]: CSSProperties } =  {
+const styles: { [key: string]: CSSProperties } = {
   formcontainer: {
     margin: "0px 0px 10px 0px",
     // border: "2px solid red",

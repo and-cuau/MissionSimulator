@@ -149,7 +149,6 @@ export default function LogIn({ role }: MissionProgressProps) {
     console.log(data2);
 
     setUser(data2);
-
     setTwoFASuccess(true);
   }
 

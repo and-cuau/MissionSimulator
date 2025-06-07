@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, CSSProperties } from "react";  // removed suspense
+import { useEffect, useRef, useState, CSSProperties } from "react"; // removed suspense
 import "../App.css";
 
 import MissionInfo from "./MissionInfo";
@@ -444,9 +444,7 @@ export default function Dashboard() {
       <h2>{missionId}</h2>
       <div style={styles.dash}>
         <div>
-          <MissionInfo
-            ref={MissionInfoRef}
-          ></MissionInfo>
+          <MissionInfo ref={MissionInfoRef}></MissionInfo>
           <Personnel
             personnel={formPersonnel}
             setPersonnel={setFormPersonnel}
@@ -615,28 +613,34 @@ export default function Dashboard() {
         <div style={styles.scheduled}>
           {/* <MultiMissionProgress></MultiMissionProgress> */}
 
-          {scheduledMissions.map((mission) => ( // got rid of index
-            <>
-              <div style={styles.splitgrid}>
-                <div>
-                  <div style={styles.entry_element}>
-                    {mission.id + " " + mission.mission_title}
+          {scheduledMissions.map(
+            (
+              mission, // got rid of index
+            ) => (
+              <>
+                <div style={styles.splitgrid}>
+                  <div>
+                    <div style={styles.entry_element}>
+                      {mission.id + " " + mission.mission_title}
+                    </div>
+                    <div style={styles.entry_element}>
+                      {mission.mission_desc}
+                    </div>
+                    <div style={styles.entry_element}>
+                      {mission.priority_level}
+                    </div>
+                    <div style={styles.entry_element}>{mission.start_time}</div>
+                    <div style={styles.entry_element}>{mission.end_time}</div>
+                    <div style={styles.buttons}></div>
                   </div>
-                  <div style={styles.entry_element}>{mission.mission_desc}</div>
-                  <div style={styles.entry_element}>
-                    {mission.priority_level}
-                  </div>
-                  <div style={styles.entry_element}>{mission.start_time}</div>
-                  <div style={styles.entry_element}>{mission.end_time}</div>
-                  <div style={styles.buttons}></div>
+                  <MissionProgress
+                    key={mission.id}
+                    missionId={mission.id}
+                  ></MissionProgress>
                 </div>
-                <MissionProgress
-                  key={mission.id}
-                  missionId={mission.id}
-                ></MissionProgress>
-              </div>
-            </>
-          ))}
+              </>
+            ),
+          )}
 
           {/* <div style={styles.scheduled_list}>
             <ul>
@@ -677,7 +681,7 @@ export default function Dashboard() {
   );
 }
 
-const styles: { [key: string]: CSSProperties } =  {
+const styles: { [key: string]: CSSProperties } = {
   testcontainer: {
     // border: "2px solid white",
   },

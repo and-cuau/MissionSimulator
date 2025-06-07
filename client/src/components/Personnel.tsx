@@ -19,8 +19,8 @@ interface PersonnelProps {
 
 const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
   ({ personnel, setPersonnel }, ref) => {
-    const { missionId} = useAuth();
-    const { user} = useAuth();
+    const { missionId } = useAuth();
+    const { user } = useAuth();
 
     // const [personnel, setPersonnel] = useState<Person[]>([]);
 

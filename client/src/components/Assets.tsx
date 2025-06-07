@@ -155,7 +155,7 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
 
 export default Assets;
 
-const styles: { [key: string]: CSSProperties } =  {
+const styles: { [key: string]: CSSProperties } = {
   formcontainer: {
     margin: "0px 0px 10px 0px",
     // border: "2px solid red",

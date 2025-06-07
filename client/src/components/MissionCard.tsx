@@ -1,6 +1,5 @@
 // import { useEffect, useRef, useState, Suspense } from "react";
 
-
 // type MissionInfoProps = {
 //   getMissions: (status: string) => void;
 //   fetchMissionData: (id: string) => void;
@@ -10,7 +9,6 @@
 // type MissionInfoRef = {
 //   ref: HTMLFormElement;
 // };
-
 
 // const MissionCard = forwardRef<HTMLFormElement, MissionInfoProps>(
 //   ({ getMissions, fetchMissionData, setMissions }, ref) => {
@@ -82,5 +80,3 @@
 //     display: "block",
 //   },
 // };
-
-
