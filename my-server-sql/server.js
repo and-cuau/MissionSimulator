@@ -207,7 +207,7 @@ app.use("/auth", authRoutes);
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("Hello, World!");
+  res.send("Test root");
 });
 
 const io = new Server(httpServer, {
