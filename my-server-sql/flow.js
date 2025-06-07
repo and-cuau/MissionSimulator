@@ -2,12 +2,23 @@ const { FlowProducer } = require("bullmq");
 
 const IORedis = require("ioredis");
 
-const connection = new IORedis({
-  host: process.env.REDIS_HOST || "127.0.0.1",
-  port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT) : 6379,
-  password: process.env.REDIS_PASSWORD || undefined,
+
+
+
+
+require("dotenv").config();
+
+if (!process.env.REDIS_URL) {
+  throw new Error("REDIS_URL is not defined");
+}
+
+const connection = new IORedis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
+
+
+
+
 
 const flow = new FlowProducer({ connection });
 
