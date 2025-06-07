@@ -51,12 +51,14 @@ interface Objective {
   [key: string]: string;
 }
 
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = "https://amiable-caring-production.up.railway.app";
+
 // const API_URL = "http://localhost:3000";
 console.log("REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
 
-// const API_URL = "http://localhost:3000";
-console.log("REACT_APP_TEST value:", process.env.REACT_APP_TEST);
+// // const API_URL = "http://localhost:3000";
+// console.log("REACT_APP_TEST value:", process.env.REACT_APP_TEST);
 
 
 export default function Dashboard() {
