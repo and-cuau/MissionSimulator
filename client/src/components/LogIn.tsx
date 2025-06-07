@@ -15,6 +15,9 @@ type MissionProgressProps = {
   role: string;
 };
 
+const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = "http://localhost:3000";
+
 export default function LogIn({ role }: MissionProgressProps) {
   const { setUser } = useAuth();
   const [newusername, setNewusername] = useState<string>("");
@@ -41,7 +44,7 @@ export default function LogIn({ role }: MissionProgressProps) {
   const sendUser = async () => {
     console.log("TESTING TEST #^T*#T*");
     try {
-      const res = await fetch("http://localhost:3000/users", {
+      const res = await fetch(`${API_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,7 +76,7 @@ export default function LogIn({ role }: MissionProgressProps) {
     console.log("username: " + username);
     console.log("password: " + password);
     try {
-      const res = await fetch(`http://localhost:3000/users/login`, {
+      const res = await fetch(`${API_URL}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -118,7 +121,7 @@ export default function LogIn({ role }: MissionProgressProps) {
   };
 
   async function sendCode() {
-    const res = await fetch(`http://localhost:3000/auth/2fa/verify/login`, {
+    const res = await fetch(`${API_URL}/auth/2fa/verify/login`, {
       method: "POST",
       body: JSON.stringify({
         user: uname,

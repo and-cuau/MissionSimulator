@@ -16,6 +16,9 @@ interface AssetsProps {
   setAssets: React.Dispatch<React.SetStateAction<Asset[]>>;
 }
 
+const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = "http://localhost:3000";
+
 const Assets = forwardRef<HTMLFormElement, AssetsProps>(
   ({ assets, setAssets }, ref) => {
     const { missionId } = useAuth();
@@ -40,7 +43,7 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
       console.log(assets);
 
       const response = await fetch(
-        `http://localhost:3000/missions/${missionId}/assets`,
+        `${API_URL}/missions/${missionId}/assets`,
         {
           method: "POST",
           body: JSON.stringify(assets),

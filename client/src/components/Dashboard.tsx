@@ -51,6 +51,10 @@ interface Objective {
   [key: string]: string;
 }
 
+const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = "http://localhost:3000";
+
+
 export default function Dashboard() {
   const { missionId, setMissionId } = useAuth();
   const { user } = useAuth();
@@ -123,7 +127,7 @@ export default function Dashboard() {
   }
 
   async function getMissions(status: string): Promise<Mission[]> {
-    const res = await fetch(`http://localhost:3000/missions/?status=${status}`); // /${id}
+    const res = await fetch(`${API_URL}/missions/?status=${status}`); // /${id}
 
     console.log("getMissions RAN. Status is " + status);
 
@@ -168,7 +172,7 @@ export default function Dashboard() {
   }
 
   async function getMissionPersonnel(id: string | null): Promise<Person[]> {
-    const res = await fetch(`http://localhost:3000/missions/${id}/personnel`); // /${id}
+    const res = await fetch(`${API_URL}/missions/${id}/personnel`); // /${id}
 
     if (!res.ok) {
       throw new Error(`Failed to fetch mission ${id}`);
@@ -195,7 +199,7 @@ export default function Dashboard() {
   }
 
   async function getMissionAssets(id: string | null): Promise<Asset[]> {
-    const res = await fetch(`http://localhost:3000/missions/${id}/assets`); // /${id}
+    const res = await fetch(`${API_URL}/missions/${id}/assets`); // /${id}
 
     if (!res.ok) {
       throw new Error(`Failed to fetch mission ${id}`);
@@ -221,7 +225,7 @@ export default function Dashboard() {
   }
 
   async function getMissionObjectives(id: string | null): Promise<Objective[]> {
-    const res = await fetch(`http://localhost:3000/missions/${id}/objectives`); // /${id}
+    const res = await fetch(`${API_URL}/missions/${id}/objectives`); // /${id}
 
     if (!res.ok) {
       throw new Error(`Failed to fetch mission ${id}`);
@@ -250,7 +254,7 @@ export default function Dashboard() {
 
   const deleteMission = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/missions/${id}`, {
+      const res = await fetch(`${API_URL}/missions/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -272,7 +276,7 @@ export default function Dashboard() {
 
   const scheduleMission = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3000/missions/${id}/schedule`, {
+      const res = await fetch(`${API_URL}/missions/${id}/schedule`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -301,7 +305,7 @@ export default function Dashboard() {
 
   const sendMissionInfo = async (obj: Record<string, string>) => {
     console.log("SEND MISSION RAN");
-    const response = await fetch(`http://localhost:3000/missions`, {
+    const response = await fetch(`${API_URL}/missions`, {
       method: "POST",
       body: JSON.stringify(obj),
       headers: {
@@ -329,7 +333,7 @@ export default function Dashboard() {
     console.log(obj);
 
     const response = await fetch(
-      `http://localhost:3000/missions/${missionId}/assets`,
+      `${API_URL}/missions/${missionId}/assets`,
       {
         method: "POST",
         body: JSON.stringify(obj),
@@ -349,7 +353,7 @@ export default function Dashboard() {
     console.log("SEND PERSONNEL RAN");
 
     const response = await fetch(
-      `http://localhost:3000/missions/${missionId}/personnel`,
+      `${API_URL}/missions/${missionId}/personnel`,
       {
         method: "POST",
         body: JSON.stringify(obj),
@@ -368,7 +372,7 @@ export default function Dashboard() {
   const sendObjectives = async (obj: Objective[]) => {
     console.log("SEND OBJECTIVES RAN");
     const response = await fetch(
-      `http://localhost:3000/missions/${missionId}/objectives`,
+      `${API_URL}/missions/${missionId}/objectives`,
       {
         method: "POST",
         body: JSON.stringify(obj),

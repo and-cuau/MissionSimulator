@@ -6,6 +6,10 @@ type MissionProgressProps = {
   missionId: string;
 };
 
+const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = "http://localhost:3000";
+
+
 export default function MissionProgress({ missionId }: MissionProgressProps) {
   //{ jobId }: MissionProgressProps
 
@@ -15,7 +19,7 @@ export default function MissionProgress({ missionId }: MissionProgressProps) {
 
   const [progress, setProgress] = useState<number>(1);
   useEffect(() => {
-    const socket = io("http://localhost:3000", {
+    const socket = io(`${API_URL}`, {
       reconnectionAttempts: 1,
       timeout: 5000,
     });

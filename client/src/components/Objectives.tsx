@@ -18,6 +18,11 @@ interface ObjectivesProps {
   setObjectives: React.Dispatch<React.SetStateAction<Objective[]>>;
 }
 
+
+const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = "http://localhost:3000";
+
+
 const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
   ({ objectives, setObjectives }, ref) => {
     const { missionId } = useAuth();
@@ -43,7 +48,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
       e.preventDefault();
 
       const response = await fetch(
-        `http://localhost:3000/missions/${missionId}/objectives`,
+        `${API_URL}/missions/${missionId}/objectives`,
         {
           method: "POST",
           body: JSON.stringify(objectives),

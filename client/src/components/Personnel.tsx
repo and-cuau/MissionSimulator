@@ -17,6 +17,11 @@ interface PersonnelProps {
   setPersonnel: React.Dispatch<React.SetStateAction<Person[]>>;
 }
 
+
+const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = "http://localhost:3000";
+
+
 const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
   ({ personnel, setPersonnel }, ref) => {
     const { missionId } = useAuth();
@@ -43,7 +48,7 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
       console.log(personnel);
 
       const response = await fetch(
-        `http://localhost:3000/missions/${missionId}/personnel`,
+        `${API_URL}/missions/${missionId}/personnel`,
         {
           method: "POST",
           body: JSON.stringify(personnel),
