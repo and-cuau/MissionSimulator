@@ -18,7 +18,8 @@ interface PersonnelProps {
 }
 
 
-const API_URL = process.env.REACT_APP_API_URL;
+
+const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
 // const API_URL = "http://localhost:3000";
 
 
