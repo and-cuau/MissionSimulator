@@ -55,6 +55,11 @@ const API_URL = process.env.REACT_APP_API_URL;
 // const API_URL = "http://localhost:3000";
 console.log("REACT_APP_API_URL:", process.env.REACT_APP_API_URL);
 
+const TEST_VAR = process.env.TEST;
+// const API_URL = "http://localhost:3000";
+console.log("REACT_APP_API_URL:", process.env.TEST);
+
+
 export default function Dashboard() {
   const { missionId, setMissionId } = useAuth();
   const { user } = useAuth();
