@@ -71,6 +71,13 @@ const { Pool } = require("pg");
 //   port: 5432,
 // });
 
+if (!process.env.DATABASE_URL) {
+  console.error("❌ DATABASE_URL is not defined in environment variables.");
+  console.error("➡️ Make sure you've added DATABASE_URL to your Railway Node.js service.");
+  console.error("➡️ Example: DATABASE_URL = ${{ PostgreSQL.DATABASE_URL }}");
+  process.exit(1); // Exit the application
+}
+
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
