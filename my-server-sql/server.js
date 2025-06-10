@@ -14,10 +14,10 @@ const util = require("util");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken"); //  JWWWTTTTTT
 const logAction = require("./logaction");
+const crypto = require("crypto");
 
 const initiateMission = require("./flow_parent_worker");
 const initiateObjective = require("./flow_child_worker");
-
 const addMissionToFlow = require("./flow");
 
 // Middleware to protect routes:
@@ -73,27 +73,25 @@ const { Pool } = require("pg");
 
 // random
 
-if (!process.env.DATABASE_URL) {
-  console.error("❌ DATABASE_URL is not defined in environment variables.");
-  console.error("➡️ Make sure you've added DATABASE_URL to your Railway Node.js service.");
-  console.error("➡️ Example: DATABASE_URL = ${{ PostgreSQL.DATABASE_URL }}");
-  process.exit(1); // Exit the application
-}
+// if (!process.env.DATABASE_URL) {
+//   console.error("❌ DATABASE_URL is not defined in environment variables.");
+//   console.error("➡️ Make sure you've added DATABASE_URL to your Railway Node.js service.");
+//   console.error("➡️ Example: DATABASE_URL = ${{ PostgreSQL.DATABASE_URL }}");
+//   process.exit(1); // Exit the application
+// }
 
+const localDbUrl = "postgres://postgres:123456@localhost:5432/storage";
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false, // Required on Railway
-  },
+  connectionString: process.env.DATABASE_URL || localDbUrl,
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
 async function setupTables() {
-  try{
-  
-await pool
-  .query(
-    `CREATE TABLE IF NOT EXISTS users (
+  try {
+    await pool
+      .query(
+        `CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
@@ -102,12 +100,12 @@ await pool
     twofa_secret TEXT
   )
 `,
-  )
-  .catch(console.error);
+      )
+      .catch(console.error);
 
-await pool
-  .query(
-    `CREATE TABLE IF NOT EXISTS missions (
+    await pool
+      .query(
+        `CREATE TABLE IF NOT EXISTS missions (
     id SERIAL PRIMARY KEY,
     mission_title TEXT NOT NULL UNIQUE,
     mission_desc TEXT NOT NULL,
@@ -118,12 +116,12 @@ await pool
     CHECK (end_time > start_time)
   )
 `,
-  )
-  .catch(console.error);
+      )
+      .catch(console.error);
 
-await pool
-  .query(
-    `CREATE TABLE IF NOT EXISTS personnel (
+    await pool
+      .query(
+        `CREATE TABLE IF NOT EXISTS personnel (
     id SERIAL PRIMARY KEY,
     mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
@@ -133,12 +131,12 @@ await pool
     clearance_level TEXT NOT NULL
   )
 `,
-  )
-  .catch(console.error);
+      )
+      .catch(console.error);
 
-await pool
-  .query(
-    `CREATE TABLE IF NOT EXISTS assets (
+    await pool
+      .query(
+        `CREATE TABLE IF NOT EXISTS assets (
     id SERIAL PRIMARY KEY,
     mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
     asset_type TEXT NOT NULL,
@@ -147,12 +145,12 @@ await pool
     capabilities TEXT NOT NULL
   )
 `,
-  )
-  .catch(console.error);
+      )
+      .catch(console.error);
 
-await pool
-  .query(
-    `CREATE TABLE IF NOT EXISTS objectives (
+    await pool
+      .query(
+        `CREATE TABLE IF NOT EXISTS objectives (
     id SERIAL PRIMARY KEY,
     mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
     description TEXT NOT NULL,
@@ -163,41 +161,42 @@ await pool
     end_time TIMESTAMP NOT NULL
   )
 `,
-  )
-  .catch(console.error);
+      )
+      .catch(console.error);
 
-await pool
-  .query(
-    `CREATE TABLE IF NOT EXISTS audit_logs (
+    await pool
+      .query(
+        `CREATE TABLE IF NOT EXISTS audit_logs (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action TEXT NOT NULL,
     target_id INTEGER,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ip_address TEXT,
-    user_agent TEXT
+    user_agent TEXT,
+    data JSONB,
+    hash TEXT
   )
 `,
-  )
-  .catch(console.error);
-
-} catch (err) {
+      )
+      .catch(console.error);
+  } catch (err) {
     console.error("Error creating tables:", err);
-}
-
+  }
 }
 module.exports = pool; // ?? was = db
 
 // const db = new sqlite3.Database("./storage.db");
 const cors = require("cors");
 
-app.use(cors({
-  origin: process.env.CLIENT_URL || '*', // Replace with actual frontend URL if needed
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "*", // Replace with actual frontend URL if needed
+    credentials: true,
+  }),
+);
 
-
-app.use(express.json()); // imprtant for reading req body ! Modern, built-in way
+app.use(express.json()); // imprtant for reading req body
 app.use(express.urlencoded({ extended: true }));
 
 app.use((req, res, next) => {
@@ -219,13 +218,12 @@ const io = new Server(httpServer, {
 const { QueueEvents, tryCatch } = require("bullmq");
 const IORedis = require("ioredis");
 
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
-const connection = new IORedis(process.env.REDIS_URL, {
+const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   family: 0, // This enables IPv6 (and IPv4 fallback) to work with Railway
 });
-
-
 
 const queueEvents = new QueueEvents("objectives", { connection });
 
@@ -250,18 +248,14 @@ io.on("connection", (socket) => {
   });
 });
 
-
 (async () => {
   await setupTables();
 
   // Start your server AFTER tables are ready
   httpServer.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
-
+    console.log(`Server is running at http://localhost:${PORT}`);
+  });
 })();
-
-
 
 app.post("/users", async (req, res) => {
   // removed async
@@ -290,7 +284,7 @@ app.post("/users", async (req, res) => {
     return res.status(404).json({ error: "User already exists" });
   } else {
     console.log(`New user inserted with ID: ${result.rows[0].id}`);
-     return res.json({ error: "User already exists" });
+    return res.json({ error: "User already exists" });
   }
 });
 
@@ -336,11 +330,10 @@ app.post("/users/login", async (req, res) => {
 app.post(
   "/missions",
   authenticateToken,
-  authorizeRoles("admin", "commander"),
+  authorizeRoles("admin", "operator"),
   async (req, res, next) => {
     console.log("POST /missions was called");
     console.log(req.body);
-
 
     const {
       mission_title,
@@ -355,7 +348,7 @@ app.post(
     try {
       const { rows: exists } = await pool.query(
         "SELECT id FROM missions WHERE mission_title = $1",
-        [mission_title]
+        [mission_title],
       );
 
       if (exists.length) {
@@ -377,10 +370,10 @@ app.post(
           mission_status,
           start_time,
           end_time,
-        ]
+        ],
       );
 
-      req.missionId = rows[0].id;      
+      req.missionId = rows[0].id;
       console.log(`New mission inserted with ID: ${req.missionId}`);
 
       // addMissionJob(start_time, end_time, req.missionId); // FLAG
@@ -392,52 +385,63 @@ app.post(
       return res.status(500).send("Internal server error");
     }
   },
-  logAction("MISSION_CREATED", (req) => req.missionId)  
+  logAction("MISSION_CREATED", (req) => req.missionId),
 );
-
 
 app.post(
   "/missions/:missionId/personnel",
   authenticateToken,
   async (req, res, next) => {
-    const missionId = req.params.missionId;     
+    const missionId = req.params.missionId;
     console.log(`POST /missions/${missionId}/personnel was called`);
 
-    const missionPersonnel = req.body;               
+    const missionPersonnel = req.body;
     console.log(missionId);
     console.log(missionPersonnel);
 
     try {
       for (const person of missionPersonnel) {
-        const { name, role, assignment_time = "2025-01-01 12:00:00", status = "ready", clearance_level } = person;
+        const {
+          name,
+          role,
+          assignment_time = "2025-01-01 12:00:00",
+          status = "ready",
+          clearance_level,
+        } = person;
 
         await pool.query(
           `INSERT INTO personnel
            (mission_id, name, role, assignment_time, status, clearance_level)
-           VALUES ($1, $2, $3, $4, $5, $6)`,   
-          [missionId, name, role, "2025-01-01 12:00:00", "ready", clearance_level]
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            missionId,
+            name,
+            role,
+            "2025-01-01 12:00:00",
+            "ready",
+            clearance_level,
+          ],
         );
       }
 
-      req.missionId = missionId;                
-      next();                                   
+      req.missionId = missionId;
+      next();
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  logAction("PERSON_CREATED", (req) => req.missionId)
+  // logAction("PERSON_CREATED", (req) => req.missionId),
 );
-
 
 app.post(
   "/missions/:missionId/assets",
   authenticateToken,
   async (req, res, next) => {
-    const missionId = req.params.missionId;            
+    const missionId = req.params.missionId;
     console.log(`POST /missions/${missionId}/assets was called`);
 
-    const missionAssets = req.body;                    
+    const missionAssets = req.body;
     console.log(missionAssets);
 
     try {
@@ -448,20 +452,19 @@ app.post(
           `INSERT INTO assets
            (mission_id, asset_type, status, location, capabilities)
            VALUES ($1, $2, $3, $4, $5)`,
-          [missionId, asset_type, status, location, capabilities]
+          [missionId, asset_type, status, location, capabilities],
         );
       }
 
-      req.missionId = missionId;           
-      next();                                
+      req.missionId = missionId;
+      next();
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  logAction("ASSET_CREATED", (req) => req.missionId)
+  // logAction("ASSET_CREATED", (req) => req.missionId),
 );
-
 
 app.post(
   "/missions/:missionId/objectives",
@@ -470,8 +473,8 @@ app.post(
     const missionId = req.params.missionId;
     console.log(`POST /missions/${missionId}/objectives was called`);
 
-    const missionObjectives = req.body;    
-    
+    const missionObjectives = req.body;
+
     console.log("misobjectives: ");
     console.log(missionObjectives);
 
@@ -479,11 +482,11 @@ app.post(
       for (const objective of missionObjectives) {
         const {
           description,
-          status ="ready",
+          status = "ready",
           depends_on,
           est_duration,
-          start_time = '2025-01-01 12:00:00',
-          end_time = '2025-01-01 12:00:00',
+          start_time = "2025-01-01 12:00:00",
+          end_time = "2025-01-01 12:00:00",
         } = objective;
 
         await pool.query(
@@ -497,38 +500,36 @@ app.post(
             "ready",
             depends_on,
             est_duration,
-            '2025-01-01 12:00:00',
-            '2025-01-01 12:00:00'
-          ]
+            "2025-01-01 12:00:00",
+            "2025-01-01 12:00:00",
+          ],
         );
       }
 
-      req.missionId = missionId;         
-      next();                            
+      req.missionId = missionId;
+      next();
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  logAction("OBJECTIVE_CREATED", (req) => req.missionId)
+  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
 );
-
 
 app.post(
   "/missions/:missionId/schedule",
   authenticateToken,
-  authorizeRoles("admin", "commander"),
+  authorizeRoles("admin", "operator"),
   async (req, res, next) => {
     const missionId = req.params.missionId;
     console.log(`POST /missions/${missionId}/schedule was called`);
 
     try {
-  
       const { rowCount } = await pool.query(
         `UPDATE missions
          SET status = 'scheduled'
          WHERE id = $1`,
-        [missionId]
+        [missionId],
       );
       console.log(`Row(s) updated: ${rowCount}`);
 
@@ -538,10 +539,9 @@ app.post(
         updated: rowCount,
       });
 
-
       const { rows: objectives } = await pool.query(
         `SELECT * FROM objectives WHERE mission_id = $1`,
-        [missionId]
+        [missionId],
       );
       console.log("Objectives:", objectives);
 
@@ -551,19 +551,83 @@ app.post(
       initiateMission();
       initiateObjective();
 
-  
       req.missionId = missionId;
-      next();                                   // run logAction
+      next(); // run logAction
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  logAction("OBJECTIVE_CREATED", (req) => req.missionId)
+  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
 );
 
+app.post(
+  "/auditlogs",
+  async (req, res, next) => {
+    // const missionId = req.params.missionId;
+    console.log(`POST /auditlogs was called`);
 
+    const rawBody = req.body;
 
+    const user_id = rawBody.user_id;
+    const missionId = rawBody.mission_id;
+
+    const jsonstring = JSON.stringify(rawBody.data);
+
+    const hash = crypto
+      .createHash("sha256")
+      .update(JSON.stringify(rawBody))
+      .digest("hex");
+
+    try {
+      const user_agent = req.headers["user-agent"];
+
+      const result = await pool.query(
+        `INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent, data, hash)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *`,
+        [
+          user_id,
+          "CREATED MISSION WITH ASSOCIATED DATA",
+          missionId,
+          "someipaddress",
+          user_agent,
+          jsonstring,
+          hash,
+        ],
+      );
+
+      req.missionId = missionId;
+      next(); // run logAction
+    } catch (err) {
+      console.error("Database error:", err);
+      return res.status(500).send("Internal server error");
+    }
+  },
+  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
+);
+
+app.get(
+  "/auditlogs",
+  express.raw({ type: "application/json" }),
+  async (req, res, next) => {
+    const missionId = req.params.missionId;
+    console.log(`GET /auditlogs was called`);
+
+    try {
+      const result = await pool.query(`SELECT * FROM audit_logs`);
+
+      return res.send(result.rows);
+
+      req.missionId = missionId;
+      next(); // run logAction
+    } catch (err) {
+      console.error("Database error:", err);
+      return res.status(500).send("Internal server error");
+    }
+  },
+  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
+);
 
 app.get("/missions", async (req, res) => {
   const status = req.query.status;
@@ -572,10 +636,9 @@ app.get("/missions", async (req, res) => {
   try {
     const { rows } = await pool.query(
       "SELECT * FROM missions WHERE status = $1",
-      [status]
+      [status],
     );
 
- 
     rows.forEach((row) => {
       row.id = row.id.toString();
     });
@@ -595,10 +658,9 @@ app.get("/missions/:missionId", async (req, res) => {
   console.log(`GET /missions/${missionId} was called`);
 
   try {
-    const { rows } = await pool.query(
-      "SELECT * FROM missions WHERE id = $1",
-      [missionId]
-    );
+    const { rows } = await pool.query("SELECT * FROM missions WHERE id = $1", [
+      missionId,
+    ]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: "Mission not found" });
@@ -614,7 +676,6 @@ app.get("/missions/:missionId", async (req, res) => {
   }
 });
 
-
 app.get("/missions/:missionId/personnel", async (req, res) => {
   const missionId = req.params.missionId;
   console.log(`GET /missions/${missionId}/personnel was called`);
@@ -622,11 +683,11 @@ app.get("/missions/:missionId/personnel", async (req, res) => {
   try {
     const { rows } = await pool.query(
       "SELECT * FROM personnel WHERE mission_id = $1",
-      [missionId]
+      [missionId],
     );
 
-    // 
-    rows.forEach(row => {
+    //
+    rows.forEach((row) => {
       row.mission_id = row.mission_id.toString();
     });
 
@@ -640,7 +701,6 @@ app.get("/missions/:missionId/personnel", async (req, res) => {
   }
 });
 
-
 app.get("/missions/:missionId/assets", async (req, res) => {
   const missionId = req.params.missionId;
   console.log(`GET /missions/${missionId}/assets was called`);
@@ -648,11 +708,11 @@ app.get("/missions/:missionId/assets", async (req, res) => {
   try {
     const { rows } = await pool.query(
       "SELECT * FROM assets WHERE mission_id = $1",
-      [missionId]
+      [missionId],
     );
 
     // Optional: convert mission_id to string if needed
-    rows.forEach(row => {
+    rows.forEach((row) => {
       row.mission_id = row.mission_id.toString();
     });
 
@@ -671,11 +731,10 @@ app.get("/missions/:missionId/objectives", async (req, res) => {
   try {
     const { rows } = await pool.query(
       "SELECT * FROM objectives WHERE mission_id = $1",
-      [missionId]
+      [missionId],
     );
 
-    
-    rows.forEach(row => {
+    rows.forEach((row) => {
       row.mission_id = row.mission_id.toString();
     });
 
@@ -688,60 +747,44 @@ app.get("/missions/:missionId/objectives", async (req, res) => {
   }
 });
 
-app.delete("/missions/:missionId", async (req, res) => {
-  const missionId = req.params.missionId;
-  console.log(`DELETE /missions/${missionId} was called`);
+// async function deleteJob(jobId) {
+//   const job = await myQueue.getJob(jobId);
+//   if (!job) {
+//     console.log(`No job found with ID ${jobId}`);
+//     return;
+//   }
 
-  try {
-    const result = await pool.query(
-      "DELETE FROM missions WHERE id = $1",
-      [missionId]
-    );
+//   await job.remove();
+//   console.log(`Job ${jobId} deleted from queue`);
+// }
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "Mission not found" });
+app.delete(
+  "/missions/:missionId",
+  authorizeRoles("admin"),
+  async (req, res) => {
+    const missionId = req.params.missionId;
+    console.log("DELETE /missions/" + missionId + " was called");
+
+    try {
+      // 🔑 parameterized query prevents SQL-injection
+      const result = await pool.query("DELETE FROM missions WHERE id = $1", [
+        missionId,
+      ]);
+
+      if (result.rowCount === 0) {
+        // nothing deleted ⇒ mission did not exist
+        return res.status(404).json({ message: "Mission not found" });
+      }
+
+      return res.status(200).json({ message: "Mission deleted successfully" });
+    } catch (err) {
+      console.error("Failed to delete mission:", err);
+      return res.status(500).json({ error: "Failed to delete mission" });
     }
 
-    await deleteJob(missionId);
-
-    res.status(200).json({ message: "Mission and job deleted successfully" });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete mission" });
-  }
-});
-
-
-async function deleteJob(jobId) {
-
-  const job = await myQueue.getJob(jobId);
-  if (!job) {
-    console.log(`No job found with ID ${jobId}`);
-    return;
-  }
-
-  await job.remove();
-  console.log(`Job ${jobId} deleted from queue`);
-}
-
-// app.delete("/missions/:missionId", async (req, res) => {
-//   const missionId = req.params.missionId;
-//   console.log("DELETE /missions/" + missionId + " was called");
-
-//   await db.run("DELETE FROM missions WHERE id = ?", [missionId], function (err){
-//     if (err) {
-//       console.error(err.message);
-//       return res.status(500).json({ error: "Failed to delete mission" });
-//     }
-//     if (this.changes === 0) {
-//       return res.status(404).json({ message: "Mission not found" });
-//     }
-
-//     res.status(200).json({ message: "Mission deleted successfully" });
-//   });
-
-//   await deleteJob(missionId);
-// });
+    // await deleteJob(missionId);
+  },
+);
 
 // async function deleteJob(jobId) {
 //   // 1 ‑ look the job up in Redis

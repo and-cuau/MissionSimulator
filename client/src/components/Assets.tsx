@@ -16,8 +16,8 @@ interface AssetsProps {
   setAssets: React.Dispatch<React.SetStateAction<Asset[]>>;
 }
 
-const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-// const API_URL = "http://localhost:3000";
+// const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
+const API_URL = "http://localhost:3000";
 
 const Assets = forwardRef<HTMLFormElement, AssetsProps>(
   ({ assets, setAssets }, ref) => {
@@ -42,18 +42,15 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
 
       console.log(assets);
 
-      const response = await fetch(
-        `${API_URL}/missions/${missionId}/assets`,
-        {
-          method: "POST",
-          body: JSON.stringify(assets),
-          headers: {
-            "X-User-ID": "12345",
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user?.token}`,
-          },
+      const response = await fetch(`${API_URL}/missions/${missionId}/assets`, {
+        method: "POST",
+        body: JSON.stringify(assets),
+        headers: {
+          "X-User-ID": "12345",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user?.token}`,
         },
-      );
+      });
 
       const result = await response.text();
       console.log(result);

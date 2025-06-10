@@ -12,8 +12,13 @@ import { useEffect } from "react";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip);
 
+interface progress {
+  prog: number;
+  objective: string;
+}
+
 type MissionProgressProps = {
-  progressprop: number;
+  progressprop: progress;
 };
 
 export default function ObjectiveProgress({
@@ -55,14 +60,14 @@ export default function ObjectiveProgress({
   //   };
   // }
 
-  console.log("re render triggered");
+  // console.log("re render triggered");
 
   const data = {
-    labels: ["Progress"],
+    labels: [progressprop.objective],
     datasets: [
       {
-        label: "Progress",
-        data: [progressprop],
+        label: progressprop.objective,
+        data: [progressprop.prog],
         backgroundColor: "rgba(75, 192, 192, 0.8)",
         borderRadius: 10,
         barThickness: 30,
@@ -82,10 +87,20 @@ export default function ObjectiveProgress({
       x: {
         min: 0,
         max: 100,
-        display: false,
+
+        display: true, // make sure display is true to show the axis
+        title: {
+          display: true,
+          // text: progressprop.prog, // <-- your desired label here
+          font: {
+            size: 14,
+          },
+          color: "#666",
+        },
       },
+
       y: {
-        display: false,
+        display: true,
       },
     },
   };
@@ -108,8 +123,8 @@ const styles = {
   test: {
     // display: "inline-block",
     margin: "0px 10px",
-    // border: "2px solid blue",
-    height: "50px",
-    width: "130px",
+    // border: "2px solid red",
+    height: "60px",
+    width: "140px",
   },
 };

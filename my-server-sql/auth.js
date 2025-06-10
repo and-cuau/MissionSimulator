@@ -33,10 +33,10 @@ router.get("/2fa/setup", async (req, res) => {
   const pool = req.db;
 
   try {
-    await pool.query(
-  `UPDATE users SET twofa_secret = $1 WHERE username = $2`,
-  [secret.base32, username]
-);
+    await pool.query(`UPDATE users SET twofa_secret = $1 WHERE username = $2`, [
+      secret.base32,
+      username,
+    ]);
     // res.json({ message: "2FA enabled" });
   } catch (err) {
     console.error("DB update error:", err.message);
@@ -58,11 +58,10 @@ router.post("/2fa/verify/login", async (req, res) => {
   const pool = req.db;
 
   try {
-    const result = await pool.query(
-  `SELECT * FROM users WHERE username = $1`,
-  [user]
-);
-const row = result.rows[0];
+    const result = await pool.query(`SELECT * FROM users WHERE username = $1`, [
+      user,
+    ]);
+    const row = result.rows[0];
 
     const secret = row.twofa_secret;
 
@@ -83,8 +82,8 @@ const row = result.rows[0];
 
       const result = await pool.query(
         "SELECT * FROM users WHERE username = $1",
-        [user]
-        );
+        [user],
+      );
       const row = result.rows[0];
 
       const userobj = { id: row.id, role: row.role };
@@ -117,11 +116,10 @@ router.post("/2fa/verify/setup", async (req, res) => {
   const pool = req.db;
 
   try {
-    const result = await pool.query(
-  `SELECT * FROM users WHERE username = $1`,
-  [user]
-);
-const row = result.rows[0];
+    const result = await pool.query(`SELECT * FROM users WHERE username = $1`, [
+      user,
+    ]);
+    const row = result.rows[0];
 
     const secret = row.twofa_secret;
 
@@ -134,9 +132,9 @@ const row = result.rows[0];
 
     if (verified) {
       await pool.query(
-  "UPDATE users SET twofa_enabled = TRUE WHERE username = $1",
-  [user]
-);
+        "UPDATE users SET twofa_enabled = TRUE WHERE username = $1",
+        [user],
+      );
 
       return res.send({ success: true });
     }

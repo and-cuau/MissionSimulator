@@ -17,11 +17,8 @@ interface PersonnelProps {
   setPersonnel: React.Dispatch<React.SetStateAction<Person[]>>;
 }
 
-
-
-const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-// const API_URL = "http://localhost:3000";
-
+//const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
+const API_URL = "http://localhost:3000";
 
 const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
   ({ personnel, setPersonnel }, ref) => {
@@ -148,9 +145,9 @@ const styles = {
   formcontainer: {
     // margin: "0px 0px 10px 0px",
     // // border: "2px solid red",
-    // width: "350px",
-    // height: "180px",
-    // overflowY: "auto",
+    width: "350px",
+    height: "180px",
+    overflowY: "auto",
   },
   entry: {
     margin: "0px 0px 10px 0px",

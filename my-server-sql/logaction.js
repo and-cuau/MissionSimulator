@@ -12,16 +12,9 @@ module.exports = (action, getTargetId = () => null) => {
         // console.log("Target ID:", targetId);
         // console.log("User-Agent:", req.headers["user-agent"]);
 
-        const stmt = req.db.prepare(`
-            INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent)
-            VALUES (?, ?, ?, ?, ?)
-          `);
-        stmt.run(
-          req.user.userId, // FIXED
-          action,
-          targetId,
-          req.ip || "unknown",
-          req.headers["user-agent"],
+        db.query(
+          "INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)",
+          [userId, action, targetId, ip, userAgent],
         );
       }
     });

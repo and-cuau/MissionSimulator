@@ -2,20 +2,15 @@ const { FlowProducer } = require("bullmq");
 
 const IORedis = require("ioredis");
 
+// if (!process.env.REDIS_URL) {
+//   throw new Error("REDIS_URL is not defined");
+// }
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
-
-
-if (!process.env.REDIS_URL) {
-  throw new Error("REDIS_URL is not defined");
-}
-
-const connection = new IORedis(process.env.REDIS_URL, {
+const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   family: 0, // This enables IPv6 (and IPv4 fallback) to work with Railway
 });
-
-
-
 
 const flow = new FlowProducer({ connection });
 

@@ -15,8 +15,8 @@ type MissionProgressProps = {
   role: string;
 };
 
-const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-// const API_URL = "http://localhost:3000";
+//const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
+const API_URL = "http://localhost:3000";
 
 export default function LogIn({ role }: MissionProgressProps) {
   const { setUser } = useAuth();
@@ -42,7 +42,6 @@ export default function LogIn({ role }: MissionProgressProps) {
   console.log("LOGIN COMPONENT CODE RAN");
 
   const sendUser = async () => {
-    console.log("TESTING TEST #^T*#T*");
     try {
       const res = await fetch(`${API_URL}/users`, {
         method: "POST",
@@ -60,7 +59,6 @@ export default function LogIn({ role }: MissionProgressProps) {
       if (!res.ok) throw new Error("Server error");
 
       setSignupSuccessful(true);
-      console.log("FRICKKKK");
 
       const data = await res.json(); // parse the
       console.log("Added User: ", data); // do something with it
@@ -120,6 +118,12 @@ export default function LogIn({ role }: MissionProgressProps) {
     }
   };
 
+  const [isChecked, setIsChecked] = useState(false);
+
+  const handleChange = () => {
+    setIsChecked(!isChecked);
+  };
+
   async function sendCode() {
     const res = await fetch(`${API_URL}/auth/2fa/verify/login`, {
       method: "POST",
@@ -166,9 +170,13 @@ export default function LogIn({ role }: MissionProgressProps) {
 
       <div className="doublepanel" style={styles.doublepanel}>
         {signupSuccessful ? (
-          <div className="panel" style={styles.panel}>
-            <TwoFASetup NewUsernameProp={newusername}></TwoFASetup>
-          </div>
+          isChecked ? (
+            <div className="panel" style={styles.panel}>
+              <TwoFASetup NewUsernameProp={newusername}></TwoFASetup>
+            </div>
+          ) : (
+            <div>You have succesfully signed-up.</div>
+          )
         ) : (
           <>
             <div className="panel" style={styles.panel}>
@@ -191,9 +199,18 @@ export default function LogIn({ role }: MissionProgressProps) {
                 value={newpassword}
                 onChange={(e) => setNewpassword(e.target.value)}
               ></input>
-              <button onClick={() => setShowPassword1((prev) => !prev)}>
-                Show
-              </button>
+
+              <div>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={handleChange}
+                  />
+                  Enable 2FA
+                </label>
+                {/* <p>{isChecked ? "Subscribed ✅" : "Not Subscribed ❌"}</p> */}
+              </div>
               <button onClick={() => sendUser()}>Enter</button>
             </div>
           </>
@@ -223,7 +240,7 @@ export default function LogIn({ role }: MissionProgressProps) {
             </div>
           )
         ) : (
-          <div className="panel">
+          <div className="panel" style={styles.panel}>
             <h2>Log in</h2>
             <p>Username:</p>
             <input
@@ -233,6 +250,7 @@ export default function LogIn({ role }: MissionProgressProps) {
               onChange={(e) => setUname(e.target.value)}
             ></input>
             <p>Password:</p>
+
             <input
               className="createpword"
               placeholder="password"
@@ -241,18 +259,19 @@ export default function LogIn({ role }: MissionProgressProps) {
               onChange={(e) => setPword(e.target.value)}
             ></input>
 
-            <span>{errMsg}</span>
+            <div>
+              <span>{errMsg}</span>
+            </div>
 
-            <button onClick={() => setShowPassword((prev) => !prev)}>
-              Show
-            </button>
-            <button
-              onClick={() => {
-                checkUser(uname, pword);
-              }}
-            >
-              Enter
-            </button>
+            <div>
+              <button
+                onClick={() => {
+                  checkUser(uname, pword);
+                }}
+              >
+                Enter
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -263,11 +282,13 @@ export default function LogIn({ role }: MissionProgressProps) {
 const styles = {
   doublepanel: {
     display: "flex",
-    width: "500px",
+    width: "800px",
+    border: "2px solid red",
   },
   panel: {
     flexGrow: 1,
     display: "block",
+    border: "2px solid red",
   },
   input: {
     display: "block",

@@ -2,14 +2,12 @@
 const { Worker } = require("bullmq");
 const IORedis = require("ioredis");
 
+const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
-
-const connection = new IORedis(process.env.REDIS_URL, {
+const connection = new IORedis(redisUrl, {
   maxRetriesPerRequest: null,
   family: 0, // This enables IPv6 (and IPv4 fallback) to work with Railway
 });
-
-
 
 //  const newObj = {name: description, queueName: "objectives", data:{ description: description, length: estimated_duration}, children: null};
 count = 0;
@@ -38,7 +36,11 @@ async function runInterval(interval_len, ms, num_intervals, job) {
     console.log(percentage);
     console.log(`Iteration ${i} ${job.id}`);
     await delay(interval_len); // wait for 1 second
-    await job.updateProgress({ percent: percentage, message: "Test" });
+    console.log(job.data.description);
+    await job.updateProgress({
+      percent: percentage,
+      message: job.data.description,
+    });
   }
   console.log("Done");
 }

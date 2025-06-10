@@ -15,7 +15,7 @@ function App() {
           <Route path="/" element={<Home />} />
           {/* <Route path="/signup" element={<Signup />} /> */}
           <Route path="/admin" element={<LogIn role="Admin" />} />
-          <Route path="/commander" element={<LogIn role="Commander" />} />
+          {/* <Route path="/commander" element={<LogIn role="Commander" />} /> */}
           <Route path="/operator" element={<LogIn role="Operator" />} />
           <Route path="/observer" element={<LogIn role="Observer" />} />
         </Routes>

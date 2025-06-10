@@ -7,6 +7,7 @@ import Assets from "./Assets";
 import Objectives from "./Objectives";
 // import ObjectiveProgress from "./ObjectiveProgress";
 import MissionProgress from "./MissionProgress";
+import AuditLogs from "./AuditLogs";
 
 import { useAuth } from "../contexts/AuthContext";
 
@@ -52,14 +53,11 @@ interface Objective {
 }
 
 // const API_URL = process.env.REACT_APP_API_URL;
-const API_URL = "https://amiable-caring-production.up.railway.app";
+// const API_URL = "https://amiable-caring-production.up.railway.app";
 
 // const API_URL = "http://localhost:3000";
-console.log("REACT_APP_API_URL:", API_URL);
 
-// // const API_URL = "http://localhost:3000";
-// console.log("REACT_APP_TEST value:", process.env.REACT_APP_TEST);
-
+const API_URL = "http://localhost:3000";
 
 export default function Dashboard() {
   const { missionId, setMissionId } = useAuth();
@@ -74,6 +72,9 @@ export default function Dashboard() {
   const [personnel, setPersonnel] = useState<Person[]>([]);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [objectives, setObjectives] = useState<Objective[]>([]);
+
+   const [test, setTest] = useState<boolean>(false);
+
 
   useEffect(() => {
     console.log("Component mounted");
@@ -335,21 +336,17 @@ export default function Dashboard() {
 
   const sendAssets = async (obj: Asset[]) => {
     console.log("SEND ASSETS RAN");
-
     console.log(obj);
 
-    const response = await fetch(
-      `${API_URL}/missions/${missionId}/assets`,
-      {
-        method: "POST",
-        body: JSON.stringify(obj),
-        headers: {
-          "X-User-ID": "12345",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-        },
+    const response = await fetch(`${API_URL}/missions/${missionId}/assets`, {
+      method: "POST",
+      body: JSON.stringify(obj),
+      headers: {
+        "X-User-ID": "12345",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
       },
-    );
+    });
 
     const result = await response.text();
     console.log(result);
@@ -358,18 +355,15 @@ export default function Dashboard() {
   const sendPersonnel = async (obj: Person[]) => {
     console.log("SEND PERSONNEL RAN");
 
-    const response = await fetch(
-      `${API_URL}/missions/${missionId}/personnel`,
-      {
-        method: "POST",
-        body: JSON.stringify(obj),
-        headers: {
-          "X-User-ID": "12345",
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user?.token}`,
-        },
+    const response = await fetch(`${API_URL}/missions/${missionId}/personnel`, {
+      method: "POST",
+      body: JSON.stringify(obj),
+      headers: {
+        "X-User-ID": "12345",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
       },
-    );
+    });
 
     const result = await response.text();
     console.log(result);
@@ -394,6 +388,42 @@ export default function Dashboard() {
     console.log(result);
   };
 
+  const sendMasterLog = async (
+    mission: Record<string, string>,
+    asset: Asset[],
+    person: Person[],
+    obj: Objective[],
+  ) => {
+    const masterItem = {
+      missioninfo: mission,
+      assets: asset,
+      persons: person,
+      objs: obj,
+    };
+    
+    console.log("Master log: ");
+    console.log(masterItem);
+
+    const response = await fetch(`${API_URL}/auditlogs`, {
+      method: "POST",
+      body: JSON.stringify({
+        mission_id: missionId,
+        user_id: user?.user_id,
+        data: masterItem,
+      }),
+      headers: {
+        "X-User-ID": "12345",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+    });
+
+    setTest(!test);
+
+    const result = await response.text();
+    console.log(result);
+  };
+
   const MissionInfoRef = useRef<HTMLFormElement>(null);
   const PersonnelRef = useRef(null);
   const AssetsRef = useRef(null);
@@ -408,6 +438,7 @@ export default function Dashboard() {
       });
       // console.log("Form A Data:", dataObj);
 
+      await sendMasterLog(dataObj, formAssets, formPersonnel, formObjectives);
       await sendMissionInfo(dataObj);
     }
   };
@@ -416,7 +447,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (isInitialMount.current) {
-      isInitialMount.current = false; // Skip the first run
+      isInitialMount.current = false;
     } else {
       (async () => {
         try {
@@ -441,19 +472,28 @@ export default function Dashboard() {
           console.error("Failed to fetch mission in useEffect:", err);
         }
       })();
+
+      // (async () => {
+      //   try {
+
+      //   } catch (err) {
+      //     console.error("Failed to fetch mission in useEffect:", err);
+      //   }
+      // })();
     }
   }, [missionId]);
 
   // user?.user_name will render as blank if user is null
+  //  {user?.token}
   return (
     <>
       <h1>MissionSimulator</h1>
       <h2>
-        {user?.user_id} {user?.user_name} {user?.role} {user?.token}
+        {user?.user_id} {user?.user_name} {user?.role}
       </h2>
-      <h2>{missionId}</h2>
+      {/* <h2>{missionId}</h2> */}
       <div style={styles.dash}>
-        <div>
+        <div style={styles.twopanel}>
           <MissionInfo ref={MissionInfoRef}></MissionInfo>
           <Personnel
             personnel={formPersonnel}
@@ -651,47 +691,20 @@ export default function Dashboard() {
               </>
             ),
           )}
-
-          {/* <div style={styles.scheduled_list}>
-            <ul>
-              {scheduledMissions.map((mission, index) => (
-                <li key={index}>
-                  <div style={styles.entry_element}>
-                    {mission.id + " " + mission.mission_title}
-                  </div>
-                  <div style={styles.entry_element}>{mission.mission_desc}</div>
-                  <div style={styles.entry_element}>
-                    {mission.priority_level}
-                  </div>
-                  <div style={styles.entry_element}>{mission.start_time}</div>
-                  <div style={styles.entry_element}>{mission.end_time}</div>
-                  <div style={styles.buttons}>
-                    <button
-                      onClick={() => {
-                        setMissionId(mission.id);
-                        fetchMissionData(mission.id);
-                      }}
-                    >
-                      View
-                    </button>
-                    <button onClick={() => deleteMission(mission.id)}>
-                      Delete
-                    </button>
-                    <button onClick={() => deleteMission(mission.id)}>
-                      Start
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div> */}
         </div>
+
+        <AuditLogs test={test}></AuditLogs>
       </div>
     </>
   );
 }
 
 const styles: { [key: string]: CSSProperties } = {
+  twopanel: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+  },
+
   testcontainer: {
     // border: "2px solid white",
   },
@@ -722,7 +735,7 @@ const styles: { [key: string]: CSSProperties } = {
 
   dash: {
     width: "795px",
-    height: "2000px",
+    height: "2700px",
     overflowY: "auto",
     border: "2px solid white",
   },
