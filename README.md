@@ -4,7 +4,7 @@ This application is designed to simulate launching and tracking missions as well
 
 ## Technologies Used
 
-- **Frontend**: React, HTML, CSS, Typescript
+- **Frontend**: React, HTML, CSS, TypeScript
 - **Backend**: Javascript, Node.js, Express.js, SQLite3
 - **Security**: JWT, Bcrypt
 
