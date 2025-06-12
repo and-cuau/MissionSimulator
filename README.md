@@ -26,7 +26,7 @@ This application is designed to simulate launching and tracking missions as well
 
 ## Challenges & Solutions
 
-- **Challenge**: Flow child jobs are JavaScript objects that must be nested within eachother in order to execute sequentially. Data received from from client is not nested, but in an array.
+- **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
 - **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
 - **Challenge**: Desired to track completion progress of seprate objectives via front end.
 - **Solution**: Integrated Chart.js bar chart component with Socket.io client socket configured to listen for updates from tasks running on backend.
