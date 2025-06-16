@@ -30,7 +30,7 @@ module.exports = (missionId, missionObjectives) => {
   let objectiveJobs = [];
   let objectiveid = 1;
 
-  console.log(missionObjectives);
+  // console.log(missionObjectives);
 
   missionObjectives.forEach((el) => {
     const {
@@ -44,7 +44,7 @@ module.exports = (missionId, missionObjectives) => {
       end_time,
     } = el;
 
-    console.log("est duration" + est_duration);
+    // console.log("est duration" + est_duration);
 
     combinedid = missionId + "-" + objectiveid;
 
@@ -76,9 +76,9 @@ module.exports = (missionId, missionObjectives) => {
   objectiveJobs = objectiveJobs.reverse();
   objectiveJobs = nestify(objectiveJobs);
 
-  console.log();
-  console.log("test:");
-  console.dir(objectiveJobs, { depth: null });
+  // console.log();
+  // console.log("test:");
+  // console.dir(objectiveJobs, { depth: null });
 
   //    myQueue.add(
   //     "some_mission_title",

@@ -27,11 +27,11 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
 
     useEffect(() => {
       const newAsset: Asset = {
-        mission_id: "",
+        mission_id: "truck",
         asset_type: "",
         status: "ready",
-        location: "",
-        capabilities: "",
+        location: "Washington, D.C.",
+        capabilities: "Carry supplies",
       };
       setAssets([newAsset]);
     }, []);
@@ -69,10 +69,10 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
     const handleAddAsset = () => {
       const newAsset: Asset = {
         mission_id: "",
-        asset_type: "",
+        asset_type: "truck",
         status: "",
-        location: "",
-        capabilities: "",
+        location: "Washington, D.C.",
+        capabilities: "Carry supplies",
       };
 
       setAssets([...assets, newAsset]);
@@ -92,7 +92,7 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
                     value={asset.asset_type}
                     onChange={(e) => handleChange(index, e)}
                   >
-                    <option value="">Select</option>
+                    {/* <option value="">Select</option> */}
                     <option value="truck">Truck</option>
                     <option value="drone">Drone</option>
                     <option value="helicopter">Helicopter</option>

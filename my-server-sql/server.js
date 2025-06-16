@@ -6,7 +6,14 @@ const { Server } = require("socket.io");
 const app = express();
 const authRoutes = require("./auth");
 
-const httpServer = http.createServer(app); // added to share server with websocket connections
+const fs = require("fs");
+
+const options = {
+  key: fs.readFileSync("../certs/key.pem"),
+  cert: fs.readFileSync("../certs/cert.pem"),
+};
+
+const httpServer = http.createServer(options, app); // added to share server with websocket connections
 const PORT = process.env.PORT || 3000;
 
 const bodyParser = require("body-parser");
@@ -20,23 +27,27 @@ const initiateMission = require("./flow_parent_worker");
 const initiateObjective = require("./flow_child_worker");
 const addMissionToFlow = require("./flow");
 
-// Middleware to protect routes:
+const session = require("express-session");
+
 function authenticateToken(req, res, next) {
+  if (req.session?.userId) {
+    req.user = { id: req.session.userId };
+    return next();
+  }
+
   const token = req.headers["authorization"]?.split(" ")[1].trim();
 
-  // console.log("this is the token at auth:" + token);
-
-  // const token = authHeader && authHeader.split(' ')[1]; // "Bearer <token>"
   if (!token) return res.sendStatus(401);
 
   const SECRET = "my_super_secret_key";
 
   jwt.verify(token, SECRET, (err, user) => {
-    console.log("before 403");
-    if (err) return res.sendStatus(403);
+    if (err) {
+      console.log("token authentication failed");
+      return res.sendStatus(403);
+    }
     console.log("token authentication successful");
     req.user = user;
-    console.log("next called");
     next();
   });
 }
@@ -51,34 +62,7 @@ function authorizeRoles(...allowedRoles) {
   };
 }
 
-// const initSqlJs = require('sql.js');
-// let db;
-// async function initDB() {
-// // Initialize the SQL.js library
-// const SQL = await initSqlJs();
-// // Create a new database
-// db = new SQL.Database();
-
-// PostgreSQL schema setup using pool.query
-
 const { Pool } = require("pg");
-
-// const pool = new Pool({
-//   user: "postgres",
-//   host: "localhost",
-//   database: "storage",
-//   password: "123456",
-//   port: 5432,
-// });
-
-// random
-
-// if (!process.env.DATABASE_URL) {
-//   console.error("❌ DATABASE_URL is not defined in environment variables.");
-//   console.error("➡️ Make sure you've added DATABASE_URL to your Railway Node.js service.");
-//   console.error("➡️ Example: DATABASE_URL = ${{ PostgreSQL.DATABASE_URL }}");
-//   process.exit(1); // Exit the application
-// }
 
 const localDbUrl = "postgres://postgres:123456@localhost:5432/storage";
 
@@ -193,6 +177,15 @@ app.use(
   cors({
     origin: process.env.CLIENT_URL || "*", // Replace with actual frontend URL if needed
     credentials: true,
+  }),
+);
+
+app.use(
+  session({
+    secret: "your-secret-key",
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false },
   }),
 );
 
@@ -318,6 +311,8 @@ app.post("/users/login", async (req, res) => {
     if (isMatch) {
       console.log("login successful");
 
+      req.session.userId = username;
+
       return res.send({ success: true }); // res.send({loginsuccess: true})
     } else {
       res.status(401).json({ error: "Invalid credentials" });
@@ -352,10 +347,7 @@ app.post(
       );
 
       if (exists.length) {
-        return res.send({
-          msg: "Mission title is already taken",
-          id: exists[0].id,
-        });
+        return res.status(409).json({ error: "Mission title already taken" });
       }
 
       const { rows } = await pool.query(
@@ -374,7 +366,7 @@ app.post(
       );
 
       req.missionId = rows[0].id;
-      console.log(`New mission inserted with ID: ${req.missionId}`);
+      // console.log(`New mission inserted with ID: ${req.missionId}`);
 
       // addMissionJob(start_time, end_time, req.missionId); // FLAG
       // initiateTask();
@@ -385,7 +377,6 @@ app.post(
       return res.status(500).send("Internal server error");
     }
   },
-  logAction("MISSION_CREATED", (req) => req.missionId),
 );
 
 app.post(
@@ -396,8 +387,8 @@ app.post(
     console.log(`POST /missions/${missionId}/personnel was called`);
 
     const missionPersonnel = req.body;
-    console.log(missionId);
-    console.log(missionPersonnel);
+    // console.log(missionId);
+    // console.log(missionPersonnel);
 
     try {
       for (const person of missionPersonnel) {
@@ -425,13 +416,13 @@ app.post(
       }
 
       req.missionId = missionId;
-      next();
+      res.status(201).json({ success: true, message: "Personnel created" });
+      // next();
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  // logAction("PERSON_CREATED", (req) => req.missionId),
 );
 
 app.post(
@@ -442,7 +433,7 @@ app.post(
     console.log(`POST /missions/${missionId}/assets was called`);
 
     const missionAssets = req.body;
-    console.log(missionAssets);
+    // console.log(missionAssets);
 
     try {
       for (const asset of missionAssets) {
@@ -457,13 +448,13 @@ app.post(
       }
 
       req.missionId = missionId;
-      next();
+      res.status(201).json({ success: true, message: "Assets created" });
+      // next();
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  // logAction("ASSET_CREATED", (req) => req.missionId),
 );
 
 app.post(
@@ -475,8 +466,8 @@ app.post(
 
     const missionObjectives = req.body;
 
-    console.log("misobjectives: ");
-    console.log(missionObjectives);
+    // console.log("misobjectives: ");
+    // console.log(missionObjectives);
 
     try {
       for (const objective of missionObjectives) {
@@ -507,13 +498,13 @@ app.post(
       }
 
       req.missionId = missionId;
-      next();
+      res.status(201).json({ success: true, message: "Objectives created" });
+      // next();
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
 );
 
 app.post(
@@ -533,12 +524,6 @@ app.post(
       );
       console.log(`Row(s) updated: ${rowCount}`);
 
-      res.json({
-        success: true,
-        message: `Mission ${missionId} scheduled successfully.`,
-        updated: rowCount,
-      });
-
       const { rows: objectives } = await pool.query(
         `SELECT * FROM objectives WHERE mission_id = $1`,
         [missionId],
@@ -551,65 +536,80 @@ app.post(
       initiateMission();
       initiateObjective();
 
-      req.missionId = missionId;
-      next(); // run logAction
+
+       req.missionId = missionId;
+
+       res.json({
+          success: true,
+          message: `Mission ${missionId} scheduled successfully.`,
+          updated: rowCount,
+       });
+
+       next(); // necessary for passing control to next in MW stack
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
     }
   },
-  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
+  logAction("SCHEDULED MISSION", (req) => req.missionId),
 );
 
-app.post(
-  "/auditlogs",
-  async (req, res, next) => {
-    // const missionId = req.params.missionId;
-    console.log(`POST /auditlogs was called`);
+app.post("/auditlogs", async (req, res, next) => {
+  // const missionId = req.params.missionId;
+  console.log(`POST /auditlogs was called`);
 
-    const rawBody = req.body;
+  const rawBody = req.body;
 
-    const user_id = rawBody.user_id;
-    const missionId = rawBody.mission_id;
+  const user_id = rawBody.user_id;
+  const missionId = rawBody.mission_id;
 
-    const jsonstring = JSON.stringify(rawBody.data);
+  const jsonstring = JSON.stringify(rawBody.data);
 
-    const hash = crypto
-      .createHash("sha256")
-      .update(JSON.stringify(rawBody))
-      .digest("hex");
 
-    try {
-      const user_agent = req.headers["user-agent"];
+  let ip = req.ip;
 
-      const result = await pool.query(
-        `INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent, data, hash)
+if (ip === "::1") {
+  ip = "127.0.0.1";
+}
+
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(JSON.stringify(rawBody))
+    .digest("hex");
+
+  try {
+    const user_agent = req.headers["user-agent"];
+
+    const result = await pool.query(
+      `INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent, data, hash)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
     RETURNING *`,
-        [
-          user_id,
-          "CREATED MISSION WITH ASSOCIATED DATA",
-          missionId,
-          "someipaddress",
-          user_agent,
-          jsonstring,
-          hash,
-        ],
-      );
+      [
+        user_id,
+        "CREATED MISSION WITH ASSIGNED RESOURCES",
+        missionId,
+        ip,
+        user_agent,
+        jsonstring,
+        hash,
+      ],
+    );
 
-      req.missionId = missionId;
-      next(); // run logAction
-    } catch (err) {
-      console.error("Database error:", err);
-      return res.status(500).send("Internal server error");
-    }
-  },
-  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
-);
+    res.send({ success: true });
+
+    // req.missionId = missionId;
+    // next(); // run logAction
+  } catch (err) {
+    console.error("Database error:", err);
+    return res.status(500).send("Internal server error");
+  }
+});
 
 app.get(
   "/auditlogs",
   express.raw({ type: "application/json" }),
+  authenticateToken,
   async (req, res, next) => {
     const missionId = req.params.missionId;
     console.log(`GET /auditlogs was called`);
@@ -626,10 +626,9 @@ app.get(
       return res.status(500).send("Internal server error");
     }
   },
-  // logAction("OBJECTIVE_CREATED", (req) => req.missionId),
 );
 
-app.get("/missions", async (req, res) => {
+app.get("/missions", authenticateToken, async (req, res) => {
   const status = req.query.status;
   console.log(`GET /missions?status=${status} was called`);
 
@@ -643,8 +642,8 @@ app.get("/missions", async (req, res) => {
       row.id = row.id.toString();
     });
 
-    console.log("row contents: ");
-    console.log(rows);
+    // console.log("row contents: ");
+    // console.log(rows);
 
     res.json(rows);
   } catch (err) {
@@ -653,7 +652,7 @@ app.get("/missions", async (req, res) => {
   }
 });
 
-app.get("/missions/:missionId", async (req, res) => {
+app.get("/missions/:missionId", authenticateToken, async (req, res) => {
   const missionId = req.params.missionId;
   console.log(`GET /missions/${missionId} was called`);
 
@@ -676,32 +675,36 @@ app.get("/missions/:missionId", async (req, res) => {
   }
 });
 
-app.get("/missions/:missionId/personnel", async (req, res) => {
-  const missionId = req.params.missionId;
-  console.log(`GET /missions/${missionId}/personnel was called`);
+app.get(
+  "/missions/:missionId/personnel",
+  authenticateToken,
+  async (req, res) => {
+    const missionId = req.params.missionId;
+    console.log(`GET /missions/${missionId}/personnel was called`);
 
-  try {
-    const { rows } = await pool.query(
-      "SELECT * FROM personnel WHERE mission_id = $1",
-      [missionId],
-    );
+    try {
+      const { rows } = await pool.query(
+        "SELECT * FROM personnel WHERE mission_id = $1",
+        [missionId],
+      );
 
-    //
-    rows.forEach((row) => {
-      row.mission_id = row.mission_id.toString();
-    });
+      //
+      rows.forEach((row) => {
+        row.mission_id = row.mission_id.toString();
+      });
 
-    console.log("test personnel:");
-    console.log(rows);
+      // console.log("test personnel:");
+      // console.log(rows);
 
-    res.json(rows);
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).json({ error: "Database query failed" });
-  }
-});
+      res.json(rows);
+    } catch (err) {
+      console.error("Database error:", err);
+      res.status(500).json({ error: "Database query failed" });
+    }
+  },
+);
 
-app.get("/missions/:missionId/assets", async (req, res) => {
+app.get("/missions/:missionId/assets", authenticateToken, async (req, res) => {
   const missionId = req.params.missionId;
   console.log(`GET /missions/${missionId}/assets was called`);
 
@@ -723,29 +726,33 @@ app.get("/missions/:missionId/assets", async (req, res) => {
   }
 });
 
-app.get("/missions/:missionId/objectives", async (req, res) => {
-  const missionId = req.params.missionId;
-  console.log(`mission id obj is ${missionId}`);
-  console.log(`GET /missions/${missionId}/objectives was called`);
+app.get(
+  "/missions/:missionId/objectives",
+  authenticateToken,
+  async (req, res) => {
+    const missionId = req.params.missionId;
+    console.log(`mission id obj is ${missionId}`);
+    console.log(`GET /missions/${missionId}/objectives was called`);
 
-  try {
-    const { rows } = await pool.query(
-      "SELECT * FROM objectives WHERE mission_id = $1",
-      [missionId],
-    );
+    try {
+      const { rows } = await pool.query(
+        "SELECT * FROM objectives WHERE mission_id = $1",
+        [missionId],
+      );
 
-    rows.forEach((row) => {
-      row.mission_id = row.mission_id.toString();
-    });
+      rows.forEach((row) => {
+        row.mission_id = row.mission_id.toString();
+      });
 
-    console.log(rows);
+      console.log(rows);
 
-    res.json(rows);
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).json({ error: "Database query failed" });
-  }
-});
+      res.json(rows);
+    } catch (err) {
+      console.error("Database error:", err);
+      res.status(500).json({ error: "Database query failed" });
+    }
+  },
+);
 
 // async function deleteJob(jobId) {
 //   const job = await myQueue.getJob(jobId);
@@ -760,6 +767,7 @@ app.get("/missions/:missionId/objectives", async (req, res) => {
 
 app.delete(
   "/missions/:missionId",
+  authenticateToken,
   authorizeRoles("admin"),
   async (req, res) => {
     const missionId = req.params.missionId;

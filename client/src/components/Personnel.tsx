@@ -30,11 +30,11 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
     useEffect(() => {
       const newPerson: Person = {
         mission_id: "",
-        name: "",
-        role: "",
+        name: "Andre",
+        role: "squadleader",
         assignment_time: "",
         status: "",
-        clearance_level: "",
+        clearance_level: "confidential",
       };
       setPersonnel([newPerson]);
     }, []);
@@ -75,11 +75,11 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
     const handleAddPerson = () => {
       const newPerson: Person = {
         mission_id: "",
-        name: "",
-        role: "",
+        name: "Andre",
+        role: "squadleader",
         assignment_time: "",
         status: "",
-        clearance_level: "",
+        clearance_level: "confidential",
       };
 
       setPersonnel([...personnel, newPerson]);
@@ -104,12 +104,25 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
 
                 <div style={styles.inputcontainer}>
                   <span>Role: </span>
-                  <input
+                  <select
                     name="role"
-                    type="text"
                     value={person.role}
                     onChange={(e) => handleChange(index, e)}
-                  />
+                  >
+                    <option value="squadleader">Squad Leader</option>
+                    {/* <option value="">Select</option> */}
+
+                    <option value="rifleman">Rifleman</option>
+                    <option value="heavygunner">Heavy Gunner</option>
+                    <option value="sniper">Sniper</option>
+                    <option value="demolitionsexpert">
+                      Demolitions Expert
+                    </option>
+                    <option value="combatmedic">Combat Medic</option>
+                    <option value="techspecialist">Tech Specialist</option>
+                    <option value="pilotdriver">Pilot/Driver</option>
+                    <option value="commander">Commander</option>
+                  </select>
                 </div>
 
                 <div style={styles.inputcontainer}>
@@ -119,8 +132,8 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
                     value={person.clearance_level}
                     onChange={(e) => handleChange(index, e)}
                   >
-                    <option value="">Select</option>
-                    <option value="none">None</option>
+                    {/* <option value="">Select</option> */}
+                    {/* <option value="none">None</option> */}
                     <option value="confidential">Confidential</option>
                     <option value="secret">Secret</option>
                     <option value="top_secret">Top Secret</option>

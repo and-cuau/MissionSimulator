@@ -31,10 +31,10 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
     useEffect(() => {
       const newObjective: Objective = {
         mission_id: "",
-        description: "",
+        description: "Rescue",
         status: "",
         depends_on: "0",
-        est_duration: "",
+        est_duration: "3000",
         start_time: "",
         end_time: "",
       };
@@ -77,10 +77,10 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
 
       const newObjective: Objective = {
         mission_id: "",
-        description: "",
+        description: "Rescue",
         status: "",
         depends_on: "",
-        est_duration: "",
+        est_duration: "1000",
         start_time: "",
         end_time: "",
       };
@@ -104,7 +104,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
                     onChange={(e) => handleChange(index, e)}
                   />
                 </div>
-                <div style={styles.inputcontainer}>
+                {/* <div style={styles.inputcontainer}>
                   <span>Depends On: </span>
                   <input
                     name="depends_on"
@@ -112,7 +112,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
                     value={objective.depends_on}
                     onChange={(e) => handleChange(index, e)}
                   />
-                </div>
+                </div> */}
                 <div style={styles.inputcontainer}>
                   <span>Estimated Duration: </span>
                   <input
@@ -122,7 +122,6 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
                     onChange={(e) => handleChange(index, e)}
                   />
                 </div>
-
                 {/* <div style={styles.inputcontainer}>
                 <span>Start Time: </span>
                 <input

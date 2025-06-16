@@ -1,14 +1,14 @@
-import { useTable } from "react-table";
-import React, { useEffect, useState } from "react";
+import { useTable, Column } from "react-table";
+import React, { useEffect, useState, CSSProperties } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 type MissionProgressProps = {
-  test: boolean;
+  trigger: boolean;
 };
 
-// const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
 const API_URL = "http://localhost:3000";
 
-interface row {
+interface RowData {
   user_id: string;
   action: string;
   target_id: string;
@@ -19,63 +19,63 @@ interface row {
   hash: string;
 }
 
-export default function AuditLogs({ test }: MissionProgressProps) {
-  const test_data = [
-    {
-      user_id: "a1",
-      action: "test",
-      target_id: "b2",
-      timestamp: "now",
-      ip_address: "1234",
-      user_agent: "idk",
-      data: "jsonstr",
-      hash: "2rvTy6",
-    },
-  ];
-  const [data, setData] = useState<row[] | null>([]); // ✅ This is valid
+export default function AuditLogs({ trigger }: MissionProgressProps) {
+  const { user } = useAuth();
+  const [data, setData] = useState<RowData[]>([]);
+  const [modalData, setModalData] = useState<string | null>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
 
-  const [modalData, setModalData] = useState(null);
-const [isModalOpen, setModalOpen] = useState(false);
-
-const openModal = (data) => {
-    setModalData(data);
+  const openModal = (value: string) => {
+    setModalData(value);
     setModalOpen(true);
-};
+  };
 
+  useEffect(() => {
+    if (!user) setData([]);
+  }, [user]);
 
-
-
-  async function getAuditLogs() {    
-    const res = await fetch(`${API_URL}/auditlogs`); // /${id}
-
-    if (!res.ok) {
-      throw new Error(`Failed to fetch mission `);
-    }
-
-    const raw = await res.json();
-    const data: row[] = raw;
-
-    setData(data);
-
-    console.log("fetched mission objectives");
-    console.log(data);
-
-    return data;
+  async function getAuditLogs() {
+    const res = await fetch(`${API_URL}/auditlogs`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.token}`,
+      },
+    });
+    if (!res.ok) throw new Error("Failed to fetch audit logs");
+    const raw: RowData[] = await res.json();
+    setData(raw);
+    return raw;
   }
 
-  const columns = React.useMemo(
+  const columns: Column<RowData>[] = React.useMemo(
     () => [
       { Header: "Timestamp", accessor: "timestamp" },
       { Header: "User ID", accessor: "user_id" },
       { Header: "Action", accessor: "action" },
       { Header: "Target ID", accessor: "target_id" },
       { Header: "IP Address", accessor: "ip_address" },
-      { Header: "User Agent", accessor: "user_agent" },
+      {
+        Header: "User Agent",
+        accessor: "user_agent",
+        Cell: ({ value }) => (
+          <button onClick={() => openModal(value)}>View</button>
+        ),
+      },
       {
         Header: "Details",
         accessor: "data",
         Cell: ({ value }) => (
-          <button onClick={() => openModal(value)}>View</button>
+          <button
+            onClick={() =>
+              openModal(
+                typeof value === "string"
+                  ? value
+                  : JSON.stringify(value, null, 2),
+              )
+            }
+          >
+            View
+          </button>
         ),
       },
     ],
@@ -83,71 +83,80 @@ const openModal = (data) => {
   );
 
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } =
-    useTable({ columns, data });
+    useTable<RowData>({ columns, data });
 
   useEffect(() => {
-    console.log("get audit logs ran");
     getAuditLogs();
+  }, [trigger]);
 
-    return () => {
-      // cleanup code (like removing event listeners)
-    };
-  }, [test]);
-
-  return (<>
-
-  {isModalOpen ? (
-  <div className="modal-backdrop">
-    <div className="modal">
-      <pre>{JSON.stringify(modalData, null, 2)}</pre>
-      <button onClick={() => setModalOpen(false)}>Close</button>
-    </div>
-  </div>
-) :(
-     <table
-      {...getTableProps()}
-      style={{ border: "1px solid black", width: "100%" }}
-    >
-      <thead>
-        {headerGroups.map((headerGroup) => (
-          <tr {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column) => (
-              <th
-                {...column.getHeaderProps()}
-                style={{ borderBottom: "2px solid black", padding: "0.5rem" }}
-              >
-                {column.render("Header")}
-              </th>
+  return (
+    <div style={styles.bodyport}>
+      {isModalOpen ? (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <pre>{modalData}</pre>
+            <button onClick={() => setModalOpen(false)}>Close</button>
+          </div>
+        </div>
+      ) : (
+        <table {...getTableProps()} style={styles.table}>
+          <thead>
+            {headerGroups.map((headerGroup) => (
+              <tr {...headerGroup.getHeaderGroupProps()} style={styles.trtest}>
+                {headerGroup.headers.map((column) => (
+                  <th {...column.getHeaderProps()} style={styles.thtest}>
+                    {column.render("Header")}
+                  </th>
+                ))}
+              </tr>
             ))}
-          </tr>
-        ))}
-      </thead>
-
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row) => {
-          prepareRow(row);
-          return (
-            <tr {...row.getRowProps()}>
-              {row.cells.map((cell) => (
-                <td
-                  {...cell.getCellProps()}
-                  style={{ padding: "0.5rem", borderBottom: "1px solid gray" }}
-                >
-                  {cell.render("Cell")}
-                </td>
-              ))}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-
-)
-
-}
-    
-    
-
-    </>
+          </thead>
+          <tbody {...getTableBodyProps()}>
+            {rows.map((row) => {
+              prepareRow(row);
+              return (
+                <tr {...row.getRowProps()}>
+                  {row.cells.map((cell) => (
+                    <td
+                      {...cell.getCellProps()}
+                      style={{
+                        padding: "0.5rem",
+                        borderBottom: "1px solid gray",
+                      }}
+                    >
+                      {cell.render("Cell")}
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </div>
   );
 }
+
+const styles: { [key: string]: CSSProperties } = {
+  table: {
+    border: "1px solid black",
+    width: "100%",
+    borderCollapse: "collapse",
+    tableLayout: "fixed",
+  },
+  bodyport: {
+    height: "1000px",
+    overflowY: "auto",
+    border: "1px solid black",
+  },
+  trtest: {
+    borderBottom: "2px solid black",
+  },
+  thtest: {
+    position: "sticky",
+    top: 0,
+    zIndex: 10,
+    borderBottom: "2px solid black",
+    padding: "0.5rem",
+  },
+};

@@ -143,7 +143,7 @@ export default function LogIn({ role }: MissionProgressProps) {
       throw new Error(`Failed to fetch`);
     }
 
-    localStorage.setItem("token", data.token); // JSON.stringify was causing the token alteration problem. its not necessary and it adds extra quotes
+    // localStorage.setItem("token", data.token); // JSON.stringify was causing the token alteration problem. its not necessary and it adds extra quotes
 
     const data2: User = {
       user_name: data.userInfo.username,
@@ -181,7 +181,6 @@ export default function LogIn({ role }: MissionProgressProps) {
           <>
             <div className="panel" style={styles.panel}>
               <h2>Sign up</h2>
-
               <p>New username:</p>
               <input
                 className="createuname"
@@ -283,12 +282,10 @@ const styles = {
   doublepanel: {
     display: "flex",
     width: "800px",
-    border: "2px solid red",
   },
   panel: {
     flexGrow: 1,
     display: "block",
-    border: "2px solid red",
   },
   input: {
     display: "block",
