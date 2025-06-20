@@ -6,6 +6,10 @@ type MissionProgressProps = {
   trigger: boolean;
 };
 
+type CellProps = {
+  value: string;
+};
+
 const API_URL = "http://localhost:3000";
 
 interface RowData {
@@ -18,6 +22,8 @@ interface RowData {
   data: string;
   hash: string;
 }
+
+
 
 export default function AuditLogs({ trigger }: MissionProgressProps) {
   const { user } = useAuth();
@@ -57,14 +63,14 @@ export default function AuditLogs({ trigger }: MissionProgressProps) {
       {
         Header: "User Agent",
         accessor: "user_agent",
-        Cell: ({ value }) => (
+        Cell: ({ value }: CellProps) => (
           <button onClick={() => openModal(value)}>View</button>
         ),
       },
       {
         Header: "Details",
         accessor: "data",
-        Cell: ({ value }) => (
+        Cell: ({ value }: CellProps) => (
           <button
             onClick={() =>
               openModal(

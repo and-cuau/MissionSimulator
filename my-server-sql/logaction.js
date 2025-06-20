@@ -29,15 +29,8 @@ module.exports = (action, getTargetId = () => null) => {
           "INSERT INTO audit_logs (user_id, action, target_id, ip_address, user_agent, data, hash) VALUES ($1, $2, $3, $4, $5, $6, $7)",
           [userId, action, targetId, ip, userAgent, data, hash],
         );
-
-     
       }
-
-     
-
     });
-
-   
 
     // next();
   };

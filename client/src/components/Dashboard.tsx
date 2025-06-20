@@ -283,6 +283,8 @@ export default function Dashboard() {
 
       const data = await res.json(); // parse the
 
+      console.log(data);
+
       return true;
     } catch (err) {
       console.error("Failed to send message:", err);
@@ -309,6 +311,8 @@ export default function Dashboard() {
       }
 
       const data = await res.json(); // parse the
+
+      console.log(data); // uncertain about this
 
       setTrigger((prev) => !prev);
 
@@ -362,7 +366,9 @@ export default function Dashboard() {
       },
     });
 
-    const result = await response.text();
+    console.log(response);
+
+    // const result = await response.text();
   };
 
   const sendPersonnel = async (obj: Person[]) => {
@@ -379,7 +385,8 @@ export default function Dashboard() {
       },
     );
 
-    const result = await response.text();
+    console.log(response);
+    // const result = await response.text();
   };
 
   const sendObjectives = async (obj: Objective[]) => {
@@ -396,7 +403,8 @@ export default function Dashboard() {
       },
     );
 
-    const result = await response.text();
+    console.log(response);
+    // const result = await response.text();
   };
 
   const sendMasterLog = async (
@@ -426,7 +434,9 @@ export default function Dashboard() {
       },
     });
 
-    const result = await response.text();
+    console.log(response);
+
+    // const result = await response.text();
 
     setTrigger((prev) => !prev);
   };
@@ -731,9 +741,6 @@ export default function Dashboard() {
 }
 
 const styles: { [key: string]: CSSProperties } = {
-
-
-
   twopanel: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -797,7 +804,7 @@ const styles: { [key: string]: CSSProperties } = {
     flexGrow: "1",
     height: "500px",
     overflowY: "auto",
-    border: "2px solid white"
+    border: "2px solid white",
   },
 
   listcontainer2: {

@@ -536,16 +536,15 @@ app.post(
       initiateMission();
       initiateObjective();
 
+      req.missionId = missionId;
 
-       req.missionId = missionId;
+      res.json({
+        success: true,
+        message: `Mission ${missionId} scheduled successfully.`,
+        updated: rowCount,
+      });
 
-       res.json({
-          success: true,
-          message: `Mission ${missionId} scheduled successfully.`,
-          updated: rowCount,
-       });
-
-       next(); // necessary for passing control to next in MW stack
+      next(); // necessary for passing control to next in MW stack
     } catch (err) {
       console.error("Database error:", err);
       return res.status(500).send("Internal server error");
@@ -565,13 +564,11 @@ app.post("/auditlogs", async (req, res, next) => {
 
   const jsonstring = JSON.stringify(rawBody.data);
 
-
   let ip = req.ip;
 
-if (ip === "::1") {
-  ip = "127.0.0.1";
-}
-
+  if (ip === "::1") {
+    ip = "127.0.0.1";
+  }
 
   const hash = crypto
     .createHash("sha256")
