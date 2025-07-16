@@ -1,4 +1,5 @@
 import React, { useEffect, forwardRef, CSSProperties } from "react";
+import { useApi } from '../contexts/APIContext';
 import { useAuth } from "../contexts/AuthContext";
 // import Dropdown from "./Dropdown";
 
@@ -17,10 +18,16 @@ interface AssetsProps {
 }
 
 // const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
+
+// const API_URL = "api";
+// const API_URL = 'http://localhost:8080/api';
+
+
 
 const Assets = forwardRef<HTMLFormElement, AssetsProps>(
   ({ assets, setAssets }, ref) => {
+    const { api_url } = useApi();
     const { missionId } = useAuth();
     const { user } = useAuth();
     // const [assets, setAssets] = useState<Asset[]>([]);
@@ -42,7 +49,7 @@ const Assets = forwardRef<HTMLFormElement, AssetsProps>(
 
       console.log(assets);
 
-      const response = await fetch(`${API_URL}/missions/${missionId}/assets`, {
+      const response = await fetch(`${api_url}/missions/${missionId}/assets`, {
         method: "POST",
         body: JSON.stringify(assets),
         headers: {

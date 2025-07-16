@@ -32,11 +32,11 @@ const Navbar = () => {
 
 export default Navbar;
 
-const styles = {
-  button: {
-    width: "70px",
-    height: "30px",
-    padding: "0px 5px 0px  5px",
-    backgroundColor: "transparent",
-  },
-};
+// const styles = {
+//   button: {
+//     width: "70px",
+//     height: "30px",
+//     padding: "0px 5px 0px  5px",
+//     backgroundColor: "transparent",
+//   },
+// };

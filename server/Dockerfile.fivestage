@@ -1,0 +1,40 @@
+
+# Stage 1: Build --------------------
+FROM node:18 AS builder
+
+# Add tzdata for time zone support
+RUN apk add --no-cache tzdata && \
+    cp /usr/share/zoneinfo/America/New_York /etc/localtime && \
+    echo "America/New_York" > /etc/timezone
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+
+# Stage 4: Development ---------------
+
+FROM builder AS dev
+
+ENV NODE_ENV=development
+
+RUN npm ci
+
+CMD ["nodemon", "server.js"]
+
+# Stage 5: Production ---------------
+
+FROM builder AS production
+
+WORKDIR /app
+
+# Only copy production deps
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
+# Start the server
+CMD ["node", "server.js"]

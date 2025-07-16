@@ -1,4 +1,5 @@
-import React, { useEffect, forwardRef } from "react";
+import React, { useEffect, forwardRef, CSSProperties } from "react";
+import { useApi } from '../contexts/APIContext';
 import { useAuth } from "../contexts/AuthContext";
 // import Dropdown from "./Dropdown";
 
@@ -18,10 +19,14 @@ interface PersonnelProps {
 }
 
 //const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
+// const API_URL = "api";
+// const API_URL = 'http://localhost:8080/api';
+
 
 const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
   ({ personnel, setPersonnel }, ref) => {
+    const { api_url } = useApi();
     const { missionId } = useAuth();
     const { user } = useAuth();
 
@@ -46,7 +51,7 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
       console.log(personnel);
 
       const response = await fetch(
-        `${API_URL}/missions/${missionId}/personnel`,
+        `${api_url}/missions/${missionId}/personnel`,
         {
           method: "POST",
           body: JSON.stringify(personnel),
@@ -154,7 +159,7 @@ const Personnel = forwardRef<HTMLFormElement, PersonnelProps>(
 
 export default Personnel;
 
-const styles = {
+const styles: { [key: string]: CSSProperties } = {
   formcontainer: {
     // margin: "0px 0px 10px 0px",
     // // border: "2px solid red",

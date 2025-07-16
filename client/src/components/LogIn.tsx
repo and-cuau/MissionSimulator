@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useApi } from '../contexts/APIContext';
 // import "../Admin.css";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -16,9 +17,15 @@ type MissionProgressProps = {
 };
 
 //const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
+// const API_URL = "api";
+//const API_URL = process.env.REACT_APP_API_URL 
+// const API_URL = 'http://localhost:8080/api';
+
+
 
 export default function LogIn({ role }: MissionProgressProps) {
+  const { api_url } = useApi();
   const { setUser } = useAuth();
   const [newusername, setNewusername] = useState<string>("");
   const [newpassword, setNewpassword] = useState<string>("");
@@ -26,8 +33,8 @@ export default function LogIn({ role }: MissionProgressProps) {
   const [uname, setUname] = useState<string>("");
   const [pword, setPword] = useState<string>("");
 
-  const [showPassword1, setShowPassword1] = useState<Boolean>(false);
-  const [showPassword, setShowPassword] = useState<Boolean>(false);
+  const [showPassword1] = useState<Boolean>(false);
+  const [showPassword] = useState<Boolean>(false);
 
   const [signupSuccessful, setSignupSuccessful] = useState<Boolean>(false);
 
@@ -43,7 +50,7 @@ export default function LogIn({ role }: MissionProgressProps) {
 
   const sendUser = async () => {
     try {
-      const res = await fetch(`${API_URL}/users`, {
+      const res = await fetch(`${api_url}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +81,7 @@ export default function LogIn({ role }: MissionProgressProps) {
     console.log("username: " + username);
     console.log("password: " + password);
     try {
-      const res = await fetch(`${API_URL}/users/login`, {
+      const res = await fetch(`${api_url}/users/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -88,25 +95,11 @@ export default function LogIn({ role }: MissionProgressProps) {
       if (res.ok) {
         console.log("Login successful:", data);
 
-        // localStorage.setItem("token", data.token); // JSON.stringify was causing the token alteration problem. its not necessary and it adds extra quotes
-
-        // const data2: User = {
-        //   user_name: data.userInfo.username,
-        //   role: data.userInfo.role,
-        //   user_id: data.userInfo.id,
-        //   token: data.token,
-        // };
-
-        // console.log("logged in user:");
-        // console.log(data2);
-
-        // setUser(data2);
-
         setLoginSuccess(true);
 
         return { success: true, data }; // contains userInfo + token
       } else {
-        setErrMessage("Incorrect username or password.");
+        setErrMessage(data.error);
         console.warn("Login failed:", data.error);
         return { success: false, error: data.error };
       }
@@ -125,7 +118,7 @@ export default function LogIn({ role }: MissionProgressProps) {
   };
 
   async function sendCode() {
-    const res = await fetch(`${API_URL}/auth/2fa/verify/login`, {
+    const res = await fetch(`${api_url}/auth/2fa/verify/login`, {
       method: "POST",
       body: JSON.stringify({
         user: uname,
@@ -181,7 +174,9 @@ export default function LogIn({ role }: MissionProgressProps) {
           <>
             <div className="panel" style={styles.panel}>
               <h2>Sign up</h2>
-              <p>New username:</p>
+
+                 <div style={styles.inlineinput}>
+              <span>New username:</span>
               <input
                 className="createuname"
                 placeholder="username"
@@ -189,8 +184,11 @@ export default function LogIn({ role }: MissionProgressProps) {
                 value={newusername}
                 onChange={(e) => setNewusername(e.target.value)}
               ></input>
+              </div>
+              
 
-              <p>New password:</p>
+                 <div style={styles.inlineinput}>
+              <span>New password:</span>
               <input
                 className="createpword"
                 placeholder="password"
@@ -198,6 +196,7 @@ export default function LogIn({ role }: MissionProgressProps) {
                 value={newpassword}
                 onChange={(e) => setNewpassword(e.target.value)}
               ></input>
+              </div>
 
               <div>
                 <label>
@@ -241,14 +240,19 @@ export default function LogIn({ role }: MissionProgressProps) {
         ) : (
           <div className="panel" style={styles.panel}>
             <h2>Log in</h2>
-            <p>Username:</p>
+
+            <div style={styles.inlineinput}>
+            <span>Username:</span>
             <input
               className="createuname"
               placeholder="username"
               value={uname}
               onChange={(e) => setUname(e.target.value)}
             ></input>
-            <p>Password:</p>
+            </div>
+
+             <div style={styles.inlineinput}>
+            <span>Password:</span>
 
             <input
               className="createpword"
@@ -257,6 +261,7 @@ export default function LogIn({ role }: MissionProgressProps) {
               value={pword}
               onChange={(e) => setPword(e.target.value)}
             ></input>
+            </div>
 
             <div>
               <span>{errMsg}</span>
@@ -279,6 +284,12 @@ export default function LogIn({ role }: MissionProgressProps) {
 }
 
 const styles = {
+  inlineinput: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    margin: "40px"
+  },
   doublepanel: {
     display: "flex",
     width: "800px",
@@ -289,6 +300,7 @@ const styles = {
   },
   input: {
     display: "block",
+    border: "2px solid red",
     margin: "0 auto",
   },
   button: {

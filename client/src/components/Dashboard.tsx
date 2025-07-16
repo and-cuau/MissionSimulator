@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, CSSProperties } from "react"; // removed suspense
+import { useApi } from '../contexts/APIContext';
 import "../App.css";
 
 import MissionInfo from "./MissionInfo";
@@ -6,8 +7,8 @@ import Personnel from "./Personnel";
 import Assets from "./Assets";
 import Objectives from "./Objectives";
 import MissionProgress from "./MissionProgress";
-import AuditLogs from "./AuditLogs";
-import ErrorBoundary from "./ErrorBoundary";
+// import AuditLogs from "./AuditLogs";
+// import ErrorBoundary from "./ErrorBoundary";
 
 // const session = require('express-session');
 
@@ -57,15 +58,22 @@ interface Objective {
 // const API_URL = "https://amiable-caring-production.up.railway.app";
 // const API_URL = "http://localhost:3000";
 
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
+// const API_URL = process.env.API_URL;
+// const API_URL = "/api"
+
+
+// const API_URL = 'http://localhost:8080/api';
 
 export default function Dashboard() {
+  const { api_url } = useApi();
   // const { missionId, setMissionId } = useAuth();
   const [viewId, setViewId] = useState<string>("-1");
 
-  const [missionCreated, setMissionCreated] = useState<boolean | undefined>(
-    undefined,
-  );
+
+  // const [missionCreated, setMissionCreated] = useState<boolean | undefined>(
+  //   undefined,
+  // );
 
   const [missionId2, setMissionId2] = useState<string | undefined>(undefined);
 
@@ -81,8 +89,8 @@ export default function Dashboard() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [objectives, setObjectives] = useState<Objective[]>([]);
 
-  const [trigger, setTrigger] = useState<boolean>(false);
-
+  const [ trigger, setTrigger] = useState<boolean>(false); // got rid of trigger state. left setter
+  console.log(trigger);
   const [missTitleErr, setMissTitleErr] = useState<string>("");
 
   useEffect(() => {
@@ -134,7 +142,7 @@ export default function Dashboard() {
   }
 
   async function getMissions(status: string): Promise<Mission[]> {
-    const res = await fetch(`${API_URL}/missions/?status=${status}`, {
+    const res = await fetch(`${api_url}/missions/?status=${status}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${user?.token}`,
@@ -180,7 +188,7 @@ export default function Dashboard() {
   }
 
   async function getMissionPersonnel(id: string | null): Promise<Person[]> {
-    const res = await fetch(`${API_URL}/missions/${id}/personnel`, {
+    const res = await fetch(`${api_url}/missions/${id}/personnel`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${user?.token}`,
@@ -210,7 +218,7 @@ export default function Dashboard() {
   }
 
   async function getMissionAssets(id: string | null): Promise<Asset[]> {
-    const res = await fetch(`${API_URL}/missions/${id}/assets`, {
+    const res = await fetch(`${api_url}/missions/${id}/assets`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${user?.token}`,
@@ -239,7 +247,7 @@ export default function Dashboard() {
   }
 
   async function getMissionObjectives(id: string | null): Promise<Objective[]> {
-    const res = await fetch(`${API_URL}/missions/${id}/objectives`, {
+    const res = await fetch(`${api_url}/missions/${id}/objectives`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${user?.token}`,
@@ -271,7 +279,7 @@ export default function Dashboard() {
 
   const deleteMission = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/missions/${id}`, {
+      const res = await fetch(`${api_url}/missions/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -282,6 +290,14 @@ export default function Dashboard() {
       if (!res.ok) throw new Error("Server error");
 
       const data = await res.json(); // parse the
+
+      if (id == viewId) {
+        setAssets([]);
+        setPersonnel([]);
+        setObjectives([]);
+      }
+
+      setTrigger((prev) => !prev);
 
       console.log(data);
 
@@ -294,7 +310,7 @@ export default function Dashboard() {
 
   const scheduleMission = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/missions/${id}/schedule`, {
+      const res = await fetch(`${api_url}/missions/${id}/schedule`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -330,7 +346,7 @@ export default function Dashboard() {
   const sendMissionInfo = async (
     obj: Record<string, string>,
   ): Promise<boolean> => {
-    const res = await fetch(`${API_URL}/missions`, {
+    const res = await fetch(`${api_url}/missions`, {
       method: "POST",
       body: JSON.stringify(obj),
       headers: {
@@ -341,7 +357,8 @@ export default function Dashboard() {
     });
 
     if (!res.ok) {
-      setMissTitleErr("Mission title is already taken.");
+      const result = await res.json();
+      setMissTitleErr(result.error);
       return false;
     }
 
@@ -356,7 +373,7 @@ export default function Dashboard() {
   };
 
   const sendAssets = async (obj: Asset[]) => {
-    const response = await fetch(`${API_URL}/missions/${missionId2}/assets`, {
+    const response = await fetch(`${api_url}/missions/${missionId2}/assets`, {
       method: "POST",
       body: JSON.stringify(obj),
       headers: {
@@ -373,7 +390,7 @@ export default function Dashboard() {
 
   const sendPersonnel = async (obj: Person[]) => {
     const response = await fetch(
-      `${API_URL}/missions/${missionId2}/personnel`,
+      `${api_url}/missions/${missionId2}/personnel`,
       {
         method: "POST",
         body: JSON.stringify(obj),
@@ -391,7 +408,7 @@ export default function Dashboard() {
 
   const sendObjectives = async (obj: Objective[]) => {
     const response = await fetch(
-      `${API_URL}/missions/${missionId2}/objectives`,
+      `${api_url}/missions/${missionId2}/objectives`,
       {
         method: "POST",
         body: JSON.stringify(obj),
@@ -420,7 +437,7 @@ export default function Dashboard() {
       objs: obj,
     };
 
-    const response = await fetch(`${API_URL}/auditlogs`, {
+    const response = await fetch(`${api_url}/auditlogs`, {
       method: "POST",
       body: JSON.stringify({
         mission_id: missionId2,
@@ -462,6 +479,37 @@ export default function Dashboard() {
   };
 
   const isInitialMount = useRef(true);
+
+  const sortMissions = () => {
+    setMissions((prev) =>
+      [...prev].sort(
+        (a, b) =>
+          new Date(a.start_time).getTime() - new Date(b.start_time).getTime(),
+      ),
+    );
+  };
+
+  // const handleSearch = async (obj: Person[]) => {
+  //   const res = await fetch(`${API_URL}/missions/search/${missionId2}`, {
+  //     method: "GET",
+  //     headers: {
+  //       "X-User-ID": "12345",
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${user?.token}`,
+  //     },
+  //   });
+
+  //   if (!res.ok) {
+  //     // throw new Error(`Failed to fetch mission ${id}`);
+  //   }
+
+  //   const raw = await res.json();
+
+  //   const data: Mission[] = raw;
+
+  //   setMissions(data);
+  //   // const result = await response.text();
+  // };
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -508,6 +556,33 @@ export default function Dashboard() {
     }
   }, [missionId2]);
 
+  const [submittedSearch, setSubmittedSearch] = useState<string>("");
+  const [inputSearch, setInputSearch] = useState<string>("");
+
+  useEffect(() => {
+    console.log("this code ran!");
+    if (submittedSearch === "") return;
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`${api_url}/missions/search?q=${encodeURIComponent(submittedSearch)}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const raw = await res.json();
+        const data: Mission[] = raw;
+
+        setMissions(data);
+      } catch (err) {
+        console.error("Fetch error:", err);
+      }
+    };
+    fetchData();
+  }, [submittedSearch]);
+
   useEffect(() => {
     if (!user) {
       setAssets([]);
@@ -521,13 +596,14 @@ export default function Dashboard() {
 
   // user?.user_name will render as blank if user is null
   //  {user?.token}
+
   return (
     <>
       {/* <button onClick={() => setTrigger((prev) => !prev)}>Trigger</button> */}
       {user ? (
         <h2>
           You are logged in as: {user?.user_name} ID: {user?.user_id} Role:{" "}
-          {user?.role}
+          {user?.role} {submittedSearch}
         </h2>
       ) : (
         <h2>You are logged out</h2>
@@ -561,143 +637,164 @@ export default function Dashboard() {
         </div>
         <button onClick={() => handleMasterSubmit()}>Submit</button>
         <div style={styles.spacer}></div>
+        <div style={styles.missionplanner}>
+          <div style={styles.viewoptions}>
+            <button onClick={() => sortMissions()}>
+              Sort by Start Time - Earliest First{" "}
+            </button>
 
-        <div style={styles.missiondetails}>
-          <div style={styles.listcontainer1}>
-            <ul>
-              {missions.map((mission, index) => (
-                <div style={styles.missioncard}>
-                  <li key={index}>
-                    <div style={styles.entry_element}>
-                      {mission.id + " " + mission.mission_title}
-                    </div>
-                    <div style={styles.entry_element}>
-                      {mission.mission_desc}
-                    </div>
-                    <div style={styles.entry_element}>
-                      {mission.priority_level}
-                    </div>
-                    <div style={styles.entry_element}>{mission.start_time}</div>
-                    <div style={styles.entry_element}>{mission.end_time}</div>
-                    <div style={styles.buttons}>
-                      <button
-                        onClick={() => {
-                          fetchMissionData(mission.id);
-                          setViewId(mission.id);
-                        }}
-                      >
-                        View
-                      </button>
-                      <button onClick={() => deleteMission(mission.id)}>
-                        Delete
-                      </button>
-                      <button onClick={() => scheduleMission(mission.id)}>
-                        Schedule
-                      </button>
-                    </div>
-                  </li>
-                </div>
-              ))}
-            </ul>
+            <input
+              type="text"
+              value={inputSearch}
+              onChange={(e) => setInputSearch(e.target.value)}
+              placeholder="Type something..."
+            ></input>
+            <button onClick={() => setSubmittedSearch(inputSearch)}>
+              Search
+            </button>
           </div>
 
-          <>
-            <div style={styles.listcontainer}>
-              <div style={styles.header}> Personnel</div>
-              <div style={styles.listcontainer2}>
-                <ul>
-                  {personnel.map((person, index) => (
-                    <div style={styles.testcontainer}>
-                      <li key={index}>
-                        <div style={styles.entry_element}>
-                          <span>Name: </span>
-                          {person.name}
-                        </div>
-                        <div style={styles.entry_element}>
-                          <span>Role: </span>
-                          {person.role}
-                        </div>
-                        <div style={styles.entry_element}>
-                          {person.assignment_time}
-                        </div>
-                        <div style={styles.entry_element}>{person.status}</div>
-                        <div style={styles.entry_element}>
-                          {" "}
-                          <span>Clearance: </span>
-                          {person.clearance_level}
-                        </div>
-                      </li>
-                    </div>
-                  ))}
-                </ul>
-              </div>
+          <div style={styles.missiondetails}>
+            <div style={styles.listcontainer1}>
+              <ul>
+                {missions.map((mission, index) => (
+                  <div style={styles.missioncard}>
+                    <li key={index}>
+                      <div style={styles.entry_element}>
+                        {mission.id + " " + mission.mission_title}
+                      </div>
+                      <div style={styles.entry_element}>
+                        {mission.mission_desc}
+                      </div>
+                      <div style={styles.entry_element}>
+                        {mission.priority_level}
+                      </div>
+                      <div style={styles.entry_element}>
+                        {mission.start_time}
+                      </div>
+                      <div style={styles.entry_element}>{mission.end_time}</div>
+                      <div style={styles.buttons}>
+                        <button
+                          onClick={() => {
+                            fetchMissionData(mission.id);
+                            setViewId(mission.id);
+                          }}
+                        >
+                          View
+                        </button>
+                        <button onClick={() => deleteMission(mission.id)}>
+                          Delete
+                        </button>
+                        <button onClick={() => scheduleMission(mission.id)}>
+                          Schedule
+                        </button>
+                      </div>
+                    </li>
+                  </div>
+                ))}
+              </ul>
             </div>
 
-            <div style={styles.listcontainer}>
-              <div style={styles.header}>Assets</div>
-              <div style={styles.listcontainer2}>
-                <ul>
-                  {assets.map((asset, index) => (
-                    <div style={styles.testcontainer}>
-                      <li key={index}>
-                        <div style={styles.entry_element}>
-                          <span>Type: </span>
-                          {asset.asset_type}
-                        </div>
-                        <div style={styles.entry_element}>
-                          <span>Status: </span>
-                          {asset.status}
-                        </div>
-                        <div style={styles.entry_element}>
-                          <span>Location: </span>
-                          {asset.location}
-                        </div>
-                        <div style={styles.entry_element}>
-                          <span>Cap: </span>
-                          {asset.capabilities}
-                        </div>
-                      </li>
-                    </div>
-                  ))}
-                </ul>
+            <>
+              <div style={styles.listcontainer}>
+                <div style={styles.header}> Personnel</div>
+                <div style={styles.listcontainer2}>
+                  <ul>
+                    {personnel.map((person, index) => (
+                      <div style={styles.testcontainer}>
+                        <li key={index}>
+                          <div style={styles.entry_element}>
+                            <span>Name: </span>
+                            {person.name}
+                          </div>
+                          <div style={styles.entry_element}>
+                            <span>Role: </span>
+                            {person.role}
+                          </div>
+                          <div style={styles.entry_element}>
+                            {person.assignment_time}
+                          </div>
+                          <div style={styles.entry_element}>
+                            {person.status}
+                          </div>
+                          <div style={styles.entry_element}>
+                            {" "}
+                            <span>Clearance: </span>
+                            {person.clearance_level}
+                          </div>
+                        </li>
+                      </div>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </div>
 
-            <div style={styles.listcontainer}>
-              <div style={styles.header}>Objectives</div>
-              <div style={styles.listcontainer2}>
-                <ul>
-                  {objectives.map((objective, index) => (
-                    <div style={styles.testcontainer}>
-                      <li key={index} style={styles.list}>
-                        <div style={styles.entry_element}>
-                          <span>Desc: </span>
-                          {objective.description}
-                        </div>
-                        <div style={styles.entry_element}>
-                          {objective.status}
-                        </div>
-                        <div style={styles.entry_element}>
-                          <span>Depends on: </span>
-                          {objective.depends_on}
-                        </div>
-                        <div style={styles.entry_element}>
-                          <span>Est. Duration: </span>
-                          {objective.est_duration}
-                        </div>
-                        <div style={styles.entry_element}>
-                          {objective.start_time}
-                        </div>
-                        <div style={styles.entry_element}>
-                          {objective.end_time}
-                        </div>
-                      </li>
-                    </div>
-                  ))}
-                </ul>
+              <div style={styles.listcontainer}>
+                <div style={styles.header}>Assets</div>
+                <div style={styles.listcontainer2}>
+                  <ul>
+                    {assets.map((asset, index) => (
+                      <div style={styles.testcontainer}>
+                        <li key={index}>
+                          <div style={styles.entry_element}>
+                            <span>Type: </span>
+                            {asset.asset_type}
+                          </div>
+                          <div style={styles.entry_element}>
+                            <span>Status: </span>
+                            {asset.status}
+                          </div>
+                          <div style={styles.entry_element}>
+                            <span>Location: </span>
+                            {asset.location}
+                          </div>
+                          <div style={styles.entry_element}>
+                            <span>Cap: </span>
+                            {asset.capabilities}
+                          </div>
+                        </li>
+                      </div>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </div>
-          </>
+
+              <div style={styles.listcontainer}>
+                <div style={styles.header}>Objectives</div>
+                <div style={styles.listcontainer2}>
+                  <ul>
+                    {objectives.map((objective, index) => (
+                      <div style={styles.testcontainer}>
+                        <li key={index} style={styles.list}>
+                          <div style={styles.entry_element}>
+                            <span>Desc: </span>
+                            {objective.description}
+                          </div>
+                          <div style={styles.entry_element}>
+                            {objective.status}
+                          </div>
+                          <div style={styles.entry_element}>
+                            <span>Depends on: </span>
+                            {objective.depends_on}
+                          </div>
+                          <div style={styles.entry_element}>
+                            <span>Est. Duration: </span>
+                            {objective.est_duration}
+                          </div>
+                          <div style={styles.entry_element}>
+                            {objective.start_time}
+                          </div>
+                          <div style={styles.entry_element}>
+                            {objective.end_time}
+                          </div>
+                        </li>
+                      </div>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </>
+          </div>
         </div>
 
         <div style={styles.scheduled}>
@@ -707,7 +804,7 @@ export default function Dashboard() {
             ) => (
               <>
                 <div style={styles.splitgrid}>
-                  <div>
+                  <div style={styles.testB}>
                     <div style={styles.entry_element}>
                       {mission.id + " " + mission.mission_title}
                     </div>
@@ -725,6 +822,8 @@ export default function Dashboard() {
                   <MissionProgress
                     key={mission.id}
                     missionId={mission.id}
+                    startTime={mission.start_time}
+                    endTime={mission.end_time}
                   ></MissionProgress>
                 </div>
               </>
@@ -732,15 +831,33 @@ export default function Dashboard() {
           )}
         </div>
 
-        <ErrorBoundary fallback={<h2>Something went wrong.</h2>}>
+        {/* <ErrorBoundary fallback={<h2>Something went wrong.</h2>}>
           <AuditLogs trigger={trigger}></AuditLogs>
-        </ErrorBoundary>
+        </ErrorBoundary> */}
       </div>
     </>
   );
 }
 
 const styles: { [key: string]: CSSProperties } = {
+  testB: {
+    border: "2px solid white",
+  },
+
+  viewoptions: {
+    height: "70px",
+    border: "2px solid white",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+
+  missionplanner: {
+    // border: "2px solid red",
+    display: "flex",
+    flexDirection: "column",
+  },
+
   twopanel: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -757,6 +874,7 @@ const styles: { [key: string]: CSSProperties } = {
   },
   missiondetails: {
     width: "100%",
+    flexGrow: "1",
     display: "flex",
     flexDirection: "row",
     border: "2px solid white",

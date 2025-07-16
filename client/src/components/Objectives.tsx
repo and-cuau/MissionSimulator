@@ -1,4 +1,5 @@
 import React, { useEffect, forwardRef, CSSProperties } from "react";
+import { useApi } from '../contexts/APIContext';
 import { useAuth } from "../contexts/AuthContext";
 // import Dropdown from "./Dropdown";
 
@@ -19,10 +20,16 @@ interface ObjectivesProps {
 }
 
 // const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
+// const API_URL = "api";
+// const API_URL = 'http://localhost:8080/api';
+
+
+
 
 const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
   ({ objectives, setObjectives }, ref) => {
+    const { api_url } = useApi();
     const { missionId } = useAuth();
     const { user } = useAuth();
 
@@ -46,7 +53,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
       e.preventDefault();
 
       const response = await fetch(
-        `${API_URL}/missions/${missionId}/objectives`,
+        `${api_url}/missions/${missionId}/objectives`,
         {
           method: "POST",
           body: JSON.stringify(objectives),
@@ -114,7 +121,7 @@ const Objectives = forwardRef<HTMLFormElement, ObjectivesProps>(
                   />
                 </div> */}
                 <div style={styles.inputcontainer}>
-                  <span>Estimated Duration: </span>
+                  <span>Duration: </span>
                   <input
                     name="est_duration"
                     type="text"

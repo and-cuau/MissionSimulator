@@ -1,0 +1,109 @@
+services:
+  proxy:
+    image: traefik:3.4.3
+    ports:
+      - "80:80"       # HTTP entrypoint
+      - "8080:8080"   # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--entrypoints.http.address=:80"
+    labels:
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.entrypoints=http"
+      - "traefik.http.routers.traefik.service=api@internal"
+    networks:
+      - frontend
+      - backend
+
+  db:
+    image: postgres:16
+    container_name: pg_container
+    restart: always
+    environment:
+      POSTGRES_USER: node_user
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: storage
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U node_user"] # test: ["CMD", "pg_isready", "-h", "127.0.0.1"]  equivalent to Brad's method. doesnt use shell though
+
+      interval: 2s
+      timeout: 1s
+      retries: 5
+    networks:
+      - backend
+    
+  redis:
+    image: redis:7
+    container_name: redis_container
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+    networks:
+      - backend
+
+  backend:
+    build: ./server
+    container_name: backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      PGHOST: db
+      PGUSER: node_user
+      PGPASSWORD: 123456
+      PGDATABASE: storage
+      PGPORT: 5432
+      PORT: 3000
+      DATABASE_URL: postgres://node_user:123456@db:5432/storage
+      REDIS_URL: redis://redis:6379 # was redis://localhost:6379
+      TZ: America/New_York
+    volumes:
+      - ./server:/app # Bind mounting codebase into a container is not recommended in production
+      - ./server/node_modules:/app/node_modules
+    command: ["npx", "nodemon", "server.js", "--legacy-watch"]
+    networks:
+      - frontend
+      - backend
+    labels:
+      - "traefik.http.routers.backend.rule=Host(`backend.localhost`)"
+      - "traefik.http.routers.backend.entrypoints=http"
+
+  frontend: 
+    build: ./client
+    container_name: frontend
+    ports:
+      - "3001:80" # local host port needs to be different for FE and BE services. 
+    depends_on:
+      - backend
+    networks:
+      - frontend
+    labels:
+      - "traefik.http.routers.frontend.rule=Host(`frontend.localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=http"
+    environment:
+      TZ: America/New_York
+    
+networks:
+  frontend:
+  backend:
+
+volumes:
+  pgdata:
+  node_modules:

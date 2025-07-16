@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useApi } from '../contexts/APIContext';
 
 type ChildProps = {
   NewUsernameProp: string;
@@ -6,9 +7,13 @@ type ChildProps = {
 
 // const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
 
-const API_URL = "http://localhost:3000";
+// const API_URL = "http://localhost:3000";
+// const API_URL = "api";
+// const API_URL = 'http://localhost:8080/api';
+
 
 const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
+  const { api_url } = useApi();
   const [code, setCode] = useState<string>("");
   const [error] = useState(""); // deleted setError
   const [success, setSuccess] = useState<Boolean>(false);
@@ -25,7 +30,7 @@ const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
     // const user = "andre";
     console.log("getQR ran");
     const res = await fetch(
-      `${API_URL}/auth/2fa/setup?user=${NewUsernameProp}`,
+      `${api_url}/auth/2fa/setup?user=${NewUsernameProp}`,
       {
         method: "GET",
         headers: {
@@ -44,7 +49,7 @@ const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
   }
 
   async function sendCode() {
-    const res = await fetch(`${API_URL}/auth/2fa/verify/setup`, {
+    const res = await fetch(`${api_url}/auth/2fa/verify/setup`, {
       method: "POST",
       body: JSON.stringify({
         user: NewUsernameProp,

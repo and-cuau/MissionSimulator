@@ -2,16 +2,6 @@ import { useState, useEffect, forwardRef } from "react";
 // import { useAuth } from "../contexts/AuthContext";
 // import Dropdown from "./Dropdown";
 
-// interface Mission {
-//   id: string;
-//   mission_title: string;
-//   mission_desc: string;
-//   priority_level: string;
-//   status: string;
-//   start_time: string;
-//   end_time: string;
-//   // Add more fields as needed
-// }
 
 type MissionInfoProps = {
   MissTitleErr: string;
@@ -46,6 +36,105 @@ const MissionInfo = forwardRef<HTMLFormElement, MissionInfoProps>(
       const localDate2 = new Date(now.getTime() - offset * 60 * 1000 + 60000);
       setDateTime2(localDate2.toISOString().slice(0, 16)); // "YYYY-MM-DDTHH:MM"
     }, []);
+
+    return (
+      <>
+        <form method="POST" style={styles.sectioncontainer} ref={ref}>
+          <h2>Mission Info</h2>
+          <div style={styles.inputcontainer}>
+            <span>Mission Title: </span>
+            <input name="mission_title" defaultValue="Mission"></input>
+          </div>
+
+          <div style={styles.inputcontainer}>
+            <span>Mission Description: </span>
+            <input name="mission_desc" defaultValue="Description"></input>
+          </div>
+
+          <div style={styles.inputcontainer}>
+            <span>Priority Level: </span>
+            <select name="priority_level" defaultValue="critical">
+              <option value="">Select</option>
+              <option value="critical">Critical</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div style={styles.inputcontainer}>
+            <span>Start Time: </span>
+            <input
+              name="start_time"
+              type="datetime-local"
+              value={dateTime}
+              onChange={(e) => setDateTime(e.target.value)}
+            />
+          </div>
+
+          <div style={styles.inputcontainer}>
+            <span>Estimated End Time: </span>
+            <input
+              name="end_time"
+              type="datetime-local"
+              value={dateTime2}
+              onChange={(e) => setDateTime2(e.target.value)}
+            />
+          </div>
+
+          <div>{MissTitleErr}</div>
+          {/* <button type="submit">Submit</button> */}
+        </form>
+      </>
+    );
+  },
+);
+
+export default MissionInfo;
+
+const styles = {
+  sectioncontainer: {
+    display: "inline-block",
+    margin: "0px 10px",
+  },
+  inputcontainer: {
+    display: "flex",
+    justifyContent: "space-between",
+    margin: "10px 0px",
+  },
+  arrow: {
+    position: "absolute",
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: "2rem",
+    backgroundColor: "rgba(0,0,0,0.3)",
+    color: "white",
+    border: "none",
+    cursor: "pointer",
+    padding: "0 10px 10px 10px",
+    zIndex: 1,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    display: "block",
+  },
+};
+
+
+
+
+  // interface Mission {
+//   id: string;
+//   mission_title: string;
+//   mission_desc: string;
+//   priority_level: string;
+//   status: string;
+//   start_time: string;
+//   end_time: string;
+//   // Add more fields as needed
+// }
+
 
     // const editMission = async () => {
     //   try {
@@ -107,87 +196,3 @@ const MissionInfo = forwardRef<HTMLFormElement, MissionInfoProps>(
     // };
 
     // const [input, setInput] = useState("");
-
-    return (
-      <>
-        <form method="POST" style={styles.sectioncontainer} ref={ref}>
-          <h2>Mission Info</h2>
-          <div style={styles.inputcontainer}>
-            <span>Mission Title: </span>
-            <input name="mission_title" defaultValue="Mission"></input>
-          </div>
-
-          <div style={styles.inputcontainer}>
-            <span>Mission Description: </span>
-            <input name="mission_desc" defaultValue="Description"></input>
-          </div>
-
-          <div style={styles.inputcontainer}>
-            <span>Priority Level: </span>
-            <select name="priority_level" defaultValue="critical">
-              <option value="">Select</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          <div style={styles.inputcontainer}>
-            <span>Start: </span>
-            <input
-              name="start_time"
-              type="datetime-local"
-              value={dateTime}
-              onChange={(e) => setDateTime(e.target.value)}
-            />
-          </div>
-
-          <div style={styles.inputcontainer}>
-            <span>End: </span>
-            <input
-              name="end_time"
-              type="datetime-local"
-              value={dateTime2}
-              onChange={(e) => setDateTime2(e.target.value)}
-            />
-          </div>
-
-          <div>{MissTitleErr}</div>
-          {/* <button type="submit">Submit</button> */}
-        </form>
-      </>
-    );
-  },
-);
-
-export default MissionInfo;
-
-const styles = {
-  sectioncontainer: {
-    display: "inline-block",
-    margin: "0px 10px",
-  },
-  inputcontainer: {
-    display: "flex",
-    justifyContent: "space-between",
-    margin: "10px 0px",
-  },
-  arrow: {
-    position: "absolute",
-    top: "50%",
-    transform: "translateY(-50%)",
-    fontSize: "2rem",
-    backgroundColor: "rgba(0,0,0,0.3)",
-    color: "white",
-    border: "none",
-    cursor: "pointer",
-    padding: "0 10px 10px 10px",
-    zIndex: 1,
-  },
-  image: {
-    width: "100%",
-    height: "100%",
-    display: "block",
-  },
-};
