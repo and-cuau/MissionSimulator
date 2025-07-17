@@ -7,6 +7,8 @@ This application is designed to simulate launching and tracking missions as well
 - **Frontend**: React, HTML, CSS, TypeScript
 - **Backend**: TypeScript, Node.js, Express.js, PostgreSQL, Redis, BullMQ
 - **Security**: JWT, Bcrypt
+- **Containerization**: Docker
+- **Orchestration**: Kubernetes
 
 ## Features & Functionality
 
@@ -39,6 +41,9 @@ Kubernetes:
 
 
 ## Challenges & Solutions
+
+- **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
+- **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
 - **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
 - **Challenge**: Desired to visually track completion progress of separate objectives via frontend.
