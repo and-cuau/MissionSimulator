@@ -35,10 +35,7 @@ Docker:
 
 Kubernetes:
 - **Service Deployment**: Application components are deployed to a Kubernetes cluster using declarative YAML manifests, including Deployments, Services, and Ingress resources.
-- **Scalability**: Supports horizontal pod autoscaling of backend and worker services based on resource usage, ensuring performance under variable workloads.
-- **Configuration Management**: Environment variables, secrets, and service settings are handled through Kubernetes ConfigMaps and Secrets, enabling secure and flexible configuration.
-- **Health Checks**: Implements liveness and readiness probes to monitor service health and enable automatic restarts of failed pods.
-
+- **Scalability**: Supports horizontal pod autoscaling of backend service.
 
 
 ## Challenges & Solutions
