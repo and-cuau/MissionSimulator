@@ -42,8 +42,8 @@ Kubernetes:
 
 ## Challenges & Solutions
 
-- **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
-- **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
+- **Challenge**: Frontend was not sending requests to backend via Ingress.
+- **Solution**: Exposed Ingress service port outside Kubernetes cluster bypassing Ingress LoadBalancer service to directly access the backend service.
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
 - **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
 - **Challenge**: Desired to visually track completion progress of separate objectives via frontend.
