@@ -27,6 +27,20 @@ Backend:
 - **Two-Factor Authentication**: Requires users to register 2FA on signup. Prompts user to enter 2FA time-based one-time passcode upon login.
 - **Non-Repudiation**: User actions are logged with action-specific details to prevent denial of having performed action.
 
+Docker: 
+- **Containerized Backend Services**: Containerized Backend Services: Backend components, including the Express server, PostgreSQL database, and Redis server, are containerized using Docker for consistent and portable environments.
+- **Docker Compose for Local Dev**: Uses docker-compose to spin up multi-container development environments with linked services, simplifying local testing and deployment.
+- **Optimized Dockerfiles**: Custom Dockerfiles created for backend and worker services to minimize image size and improve build performance.
+- **Peristent Volumes**: Configured Docker volumes to ensure database persistence across container restarts during local development.
+
+Kubernetes:
+- **Service Deployment**: Application components are deployed to a Kubernetes cluster using declarative YAML manifests, including Deployments, Services, and Ingress resources.
+- **Scalability**: Supports horizontal pod autoscaling of backend and worker services based on resource usage, ensuring performance under variable workloads.
+- **Configuration Management**: Environment variables, secrets, and service settings are handled through Kubernetes ConfigMaps and Secrets, enabling secure and flexible configuration.
+- **Health Checks**: Implements liveness and readiness probes to monitor service health and enable automatic restarts of failed pods.
+
+
+
 ## Challenges & Solutions
 
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
