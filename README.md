@@ -35,11 +35,10 @@ Docker:
 
 Kubernetes:
 - **Service Deployment**: Application components are deployed to a Kubernetes cluster using declarative YAML manifests, including Deployments, Services, and Ingress resources.
-- **Scalability**: Supports horizontal pod autoscaling of backend service.
+- **Scalability**: Supports autoscaling of pods in Deployments based on resource usage.
 
 
 ## Challenges & Solutions
-
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
 - **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
 - **Challenge**: Desired to visually track completion progress of separate objectives via frontend.
