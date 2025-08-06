@@ -5,13 +5,6 @@ type ChildProps = {
   NewUsernameProp: string;
 };
 
-// const API_URL = process.env.REACT_APP_API_URL || "https://amiable-caring-production.up.railway.app";
-
-// const API_URL = "http://localhost:3000";
-// const API_URL = "api";
-// const API_URL = 'http://localhost:8080/api';
-
-
 const TwoFASetup: React.FC<ChildProps> = ({ NewUsernameProp }) => {
   const { api_url } = useApi();
   const [code, setCode] = useState<string>("");

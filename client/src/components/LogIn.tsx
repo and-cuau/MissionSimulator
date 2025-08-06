@@ -29,24 +29,17 @@ export default function LogIn({ role }: MissionProgressProps) {
   const { setUser } = useAuth();
   const [newusername, setNewusername] = useState<string>("");
   const [newpassword, setNewpassword] = useState<string>("");
-
   const [uname, setUname] = useState<string>("");
   const [pword, setPword] = useState<string>("");
-
   const [showPassword1] = useState<Boolean>(false);
   const [showPassword] = useState<Boolean>(false);
-
   const [signupSuccessful, setSignupSuccessful] = useState<Boolean>(false);
-
   const [loginSuccess, setLoginSuccess] = useState<Boolean>(false);
-
   const [twoFASuccess, setTwoFASuccess] = useState<Boolean>(false);
-
   const [errMsg, setErrMessage] = useState<string>("");
-
   const [code, setCode] = useState<string>("");
 
-  console.log("LOGIN COMPONENT CODE RAN");
+  console.log("LOGIN COMPONENT CODE RAN");expl
 
   const sendUser = async () => {
     try {

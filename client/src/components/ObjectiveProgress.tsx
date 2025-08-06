@@ -24,43 +24,6 @@ type MissionProgressProps = {
 export default function ObjectiveProgress({
   progressprop,
 }: MissionProgressProps) {
-  // const [progress, setProgress] = useState<number>(12);
-
-  // function connectToServer() {
-  //   const jobId = 1;
-
-  //   const socket = io("http://localhost:3000", {
-  //     reconnectionAttempts: 1,
-  //     timeout: 5000,
-  //   });
-
-  //   socket.on("connect", () => {
-  //     console.log("Connected to server");
-  //   });
-
-  //   socket.on("connect_error", (err) => {
-  //     console.error("Connection error:", err.message);
-  //   });
-
-  //   socket.on("disconnect", () => {
-  //     console.warn("Disconnected from server");
-  //   });
-
-  //   socket.emit("subscribeToJob", jobId);
-
-  //   socket.on(`job-progress-${jobId}`, (data) => {
-  //     setProgress(data.percent);
-  //     if (data.jobId === jobId) {
-  //       //  setProgress(data.percent); if doesnt pass. not sure why
-  //     }
-  //   });
-
-  //   return () => {
-  //     socket.off("job-progress-");
-  //   };
-  // }
-
-  // console.log("re render triggered");
 
   const data = {
     labels: [progressprop.objective],
@@ -91,7 +54,7 @@ export default function ObjectiveProgress({
         display: true, // make sure display is true to show the axis
         title: {
           display: true,
-          // text: progressprop.prog, // <-- your desired label here
+          // text: progressprop.prog, // <-- desired label here
           font: {
             size: 14,
           },
@@ -113,17 +76,14 @@ export default function ObjectiveProgress({
     <>
       <div style={styles.test}>
         <Bar data={data} options={options} />
-        {/* <button>Test connect </button> */}
       </div>
     </>
   );
 }
-// () => connectToServer()
+
 const styles = {
   test: {
-    // display: "inline-block",
     margin: "0px 10px",
-    // border: "2px solid red",
     height: "60px",
     width: "140px",
   },
