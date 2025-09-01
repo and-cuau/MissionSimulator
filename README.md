@@ -58,7 +58,7 @@ Frontend:
 - **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on, while the frontend independently yet synchronously also tracks these IDs for the socket to subscribe to.
 
 - **Challenge**: Needed a method of tracking the lifecycle of a objective tasks running on the backend via the client socket.
-- **Solution**: Engineered client socket event listeners to listen for lifecycle events for backend objective tasks. A connection is established by the client socket on component mount via useEffect so that it is established only once in the entire mission lifecycle. Two event listeners are coded inside a separate useEffect. An event listener subscribes to objective progress value events and another event listener listens for objective completion events. Upon objective completion, a react state is set to the next mission objective task ID and this automatically triggers the useEffect, updating the event handlers to subscribe to this new objective task.
+- **Solution**: Engineered client socket event listeners to listen for lifecycle events for backend objective tasks. A connection is established by the client socket on component mount via useEffect so that it is established only once in the entire mission lifecycle. Two event listeners/handlers are coded inside a separate useEffect. An event listener/handler subscribes to objective progress value events and another event listener/handler listens for objective completion events. Upon objective completion, a react state is set to the next mission objective task ID and this automatically triggers the useEffect, updating the two event listener/handlers to subscribe to this new objective task.
   
 
 Backend: 
