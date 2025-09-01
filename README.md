@@ -4,7 +4,7 @@ This application is designed to simulate launching and tracking missions as well
 
 ## Recorded Demonstration
 
-The following video demonstrates scheduling three missions concurrently.
+The following video demonstrates viewing, scheduling, launching and tracking three missions. Missions are executed concurrently.
 
 https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
 
@@ -49,14 +49,20 @@ Kubernetes:
 ## Challenges & Solutions
 
 Frontend:
-- **Challenge**: Desired to visually track completion progress of a mission's objectives via frontend.
+- **Challenge**: Desired to visually track completion progress of mission objectives executed on the backend via the frontend.
 - **Solution**: Integrated Chart.js bar chart with Socket.io client socket configured to listen for updates from tasks (objectives) running on backend. An array of objective progress values is progressively built from data received over the client socket and mapped to single-bar Chart.js bar chart components.
+  
   A key consideration was whether to have a single socket pass data received to the multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
+
+  - **Challenge**: Objective tasks executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the front end socket difficult as it does not have knowledge of the IDs.
+- **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on while front end independently yet synchronously also tracks these IDs for the socket to subscribe to.
+  
 
 Backend: 
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
 - **Solution**: Wrote recursive algorithm to accept array of objects and transform it into nested objects.
-  
+
+
 Kubernetes:
 - **Challenge**: Frontend was not sending requests to backend via Ingress.
 - **Solution**: Exposed Ingress service port outside Kubernetes cluster bypassing Ingress LoadBalancer service to directly access the backend service.
