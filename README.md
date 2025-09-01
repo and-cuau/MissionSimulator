@@ -66,6 +66,3 @@ Backend:
 Kubernetes:
 - **Challenge**: Frontend was not sending requests to backend via Ingress.
 - **Solution**: Exposed Ingress service port outside Kubernetes cluster bypassing Ingress LoadBalancer service to directly access the backend service.
-
-
-## Future Improvements
