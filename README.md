@@ -2,6 +2,10 @@
 
 This application is designed to simulate launching and tracking missions as well as assigning personnel, assets and objectives.
 
+## Recorded Demonstration
+
+The following video demonstrates scheduling three missions concurrently.
+
 ## Technologies Used
 
 - **Frontend**: React, HTML, CSS, TypeScript
