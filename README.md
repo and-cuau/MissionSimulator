@@ -50,7 +50,7 @@ Kubernetes:
 
 Frontend:
 - **Challenge**: Desired to visually track completion progress of a mission's objectives via frontend.
-- **Solution**: Integrated Chart.js bar chart with Socket.io client socket configured to listen for updates from tasks running on backend. An array of objective progress values is progressively built from data received over the client socket and mapped to single-bar Chart.js bar chart components. 
+- **Solution**: Integrated Chart.js bar chart with Socket.io client socket configured to listen for updates from tasks (objectives) running on backend. An array of objective progress values is progressively built from data received over the client socket and mapped to single-bar Chart.js bar chart components. A key consideration was whether to have a single socket pass data received to the multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
 
 Backend: 
 - **Challenge**: Flow child jobs are JavaScript objects that must be nested within each other in order to execute sequentially. Data received from from client is not nested, but in an array.
