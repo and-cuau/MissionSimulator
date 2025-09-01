@@ -1,10 +1,10 @@
 # Mission Simulator
 
-This application is designed to simulate launching and tracking missions as well as assigning personnel, assets and objectives.
+This application is designed to simulate launching and tracking of concurrent missions with sequential objectives as well as assigning personnel, assets and objectives.
 
 ## Recorded Demonstration
 
-The following video demonstrates viewing, scheduling, and launching/tracking three missions. Missions are executed concurrently. This video is not intended to demonstrate all features of the program.
+The following video demonstrates viewing, scheduling, and launching/tracking three missions. Missions are executed concurrently. This video is not intended to demonstrate all features of the application.
 
 https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
 
