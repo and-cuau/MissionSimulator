@@ -8,7 +8,7 @@ The following video demonstrates planning, viewing, scheduling, and launching/tr
 
 https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
 
-Note: The demo contains a brief error 0:11 where the type of an asset is missing. This is a known issue and will be addressed in a future update. The remainder of the demo accurately illustrates the project’s core functionality.
+Note: The demo contains a brief error 0:11 where the type of an asset is missing. This is a known issue and will be addressed in a future update.
 
 
 ## Technologies Used
