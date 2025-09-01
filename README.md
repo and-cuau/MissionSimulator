@@ -4,7 +4,7 @@ This application is designed to simulate launching and tracking missions as well
 
 ## Recorded Demonstration
 
-The following video demonstrates viewing, scheduling, launching and tracking three missions. Missions are executed concurrently.
+The following video demonstrates viewing, scheduling, and launching/tracking three missions. Missions are executed concurrently. This video is not intended to demonstrate all features of the program.
 
 https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
 
