@@ -6,6 +6,8 @@ This application is designed to simulate launching and tracking missions as well
 
 The following video demonstrates scheduling three missions concurrently.
 
+https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
+
 ## Technologies Used
 
 - **Frontend**: React, HTML, CSS, TypeScript
