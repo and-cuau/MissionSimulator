@@ -4,7 +4,7 @@ This application is designed to simulate planning, launching, and tracking of co
 
 ## Recorded Demonstration
 
-The following video demonstrates planning, viewing, scheduling, and launching/tracking three missions with multiple obkjectives. Missions are executed concurrently. This video is not intended to demonstrate all features of the application. Viewers are encouraged to skip to sections relevant to their interests for their convenience.
+The following video demonstrates planning, viewing, scheduling, and launching/tracking three missions with multiple objectives. Missions are executed concurrently. This video is not intended to demonstrate all features of the application. Viewers are encouraged to skip to sections relevant to their interests for their convenience.
 
 https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
 
@@ -54,8 +54,8 @@ Frontend:
   
   A key consideration was whether to have a single socket pass data received to the multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
 
-- **Challenge**: Objective tasks executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the front end socket difficult as it does not have knowledge of the IDs.
-- **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on while front end independently yet synchronously also tracks these IDs for the socket to subscribe to.
+- **Challenge**: Objective tasks executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the frontend socket difficult as it does not have knowledge of the IDs.
+- **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on, while the frontend independently yet synchronously also tracks these IDs for the socket to subscribe to.
   
 
 Backend: 
