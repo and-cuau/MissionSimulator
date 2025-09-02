@@ -53,15 +53,15 @@ Kubernetes:
 
 Frontend:
 - **Challenge**: Desired to visually track completion progress of mission objectives executed on the backend via the frontend.
-- **Solution**: Integrated Chart.js bar chart with Socket.io client socket configured to listen for updates from objective tasks running on backend. An array of objective progress values is progressively built from data received over the socket connection and mapped to single-bar Chart.js bar chart components.
+- **Solution**: Integrated Chart.js bar chart with Socket.io client socket configured to listen for updates from objective jobs running on backend. An array of objective progress values is progressively built from data received over the socket connection and mapped to single-bar Chart.js bar chart components.
   
   A key consideration was whether to have a single socket pass data received to the multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
 
-- **Challenge**: Objective tasks executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the frontend socket difficult as it does not have knowledge of the IDs.
+- **Challenge**: objective jobs executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the frontend socket difficult as it does not have knowledge of the IDs.
 - **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on, while the frontend independently yet synchronously also tracks these IDs for the socket to subscribe to.
 
-- **Challenge**: Needed a method of tracking the lifecycle of a objective tasks running on the backend via the client socket.
-- **Solution**: Engineered client socket event listeners to listen for lifecycle events for backend objective tasks. A connection is established by the client socket on component mount via useEffect so that it is established only once in the entire mission lifecycle. Two event listeners/handlers are coded inside a separate useEffect. An event listener/handler subscribes to objective progress value events and another event listener/handler listens for objective completion events. Upon objective completion, a react state is set to the next mission objective task ID and this automatically triggers the useEffect, updating the two event listener/handlers to subscribe to this new objective task.
+- **Challenge**: Needed a method of tracking the lifecycle of a objective jobs running on the backend via the client socket.
+- **Solution**: Engineered client socket event listeners to listen for lifecycle events for backend objective jobs. A connection is established by the client socket on component mount via useEffect so that it is established only once in the entire mission lifecycle. Two event listeners/handlers are coded inside a separate useEffect. An event listener/handler subscribes to objective progress value events and another event listener/handler listens for objective job completion events. Upon objective completion, a react state is set to the next mission objective job ID and this automatically triggers the useEffect, updating the two event listener/handlers to subscribe to this new objective job.
   
 
 Backend: 
