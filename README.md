@@ -57,7 +57,7 @@ Frontend:
   
   A key consideration was whether to have a single socket pass data received to the multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
 
-- **Challenge**: objective jobs executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the frontend socket difficult as it does not have knowledge of the IDs.
+- **Challenge**: Objective jobs executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the frontend socket difficult as it does not have knowledge of the IDs.
 - **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on, while the frontend independently yet synchronously also tracks these IDs for the socket to subscribe to.
 
 - **Challenge**: Needed a method of tracking the lifecycle of a objective jobs running on the backend via the client socket.
