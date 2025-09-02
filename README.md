@@ -4,7 +4,7 @@ This application is designed to simulate planning, launching, and tracking of co
 
 ## Video Demonstration
 
-The following video demonstrates planning, viewing, scheduling, and launching/tracking three missions with multiple objectives input by the user. Missions are executed concurrently. *This video is not intended to demonstrate all features of the application.* The viewer is encouraged to skip to sections relevant to their interests for convenience.
+The following video demonstrates planning, viewing, scheduling, and launching/tracking three missions with multiple timed objectives input by the user. Missions are executed concurrently. *This video is not intended to demonstrate all features of the application.* The viewer is encouraged to skip to sections relevant to their interests for convenience.
 
 https://drive.google.com/drive/folders/1GnSWPNRbtU1FqKLjKARThEJgs3slpXl8
 
