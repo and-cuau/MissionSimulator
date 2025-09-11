@@ -13,8 +13,8 @@ Note: The demo contains a brief error 0:11 where the type of an asset is missing
 
 ## Technologies Used
 
-- **Frontend**: React, HTML, CSS, TypeScript
-- **Backend**: TypeScript, Node.js, Express.js, PostgreSQL, Redis, BullMQ
+- **Frontend**: React, HTML, CSS, TypeScript, Socket.io
+- **Backend**: TypeScript, Node.js, Express.js, WebSocket, PostgreSQL, Redis, BullMQ
 - **Security**: JWT, Bcrypt
 - **Containerization**: Docker
 - **Orchestration**: Kubernetes
