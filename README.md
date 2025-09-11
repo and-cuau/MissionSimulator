@@ -29,6 +29,7 @@ Frontend:
 - **Local Storage**: Persists user information and session tokens across page refreshes using localStorage API.
 - **Dynamic Component Rendering**: Conditionally renders components based on user role and state. Renders components based on API responses.
 - **Visual Objective Progress Tracking**: Tracks objectives completion progress visually using component with chart.js bar chart and integrated client socket listening for updates from objective jobs running on backend.
+- **Dynamic Form Fields:** Enables users to add additional input fields on demand via button press, allowing flexible and scalable data entry without page reloads.
 
 Backend:
 - **Error Handling**: Server handles errors and sends error code to client. Client outputs error messages to UI based on error code.  
