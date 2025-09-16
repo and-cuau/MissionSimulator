@@ -56,7 +56,7 @@ Frontend:
 - **Challenge**: Desired to visually track completion progress of mission objectives executed on the backend via the frontend.
 - **Solution**: Integrated Chart.js bar chart with Socket.io client socket configured to listen for updates from objective jobs running on backend. An array of objective progress values is progressively built from data received over the socket connection and mapped to single-bar Chart.js bar chart components.
   
-  A key consideration was whether to have a single socket pass data received to the multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
+  A key consideration was whether to have a single socket pass data received to multiple missions or to have a socket for each mission. The former option was eliminated after realization that it would not function with multiple backend missions emitting updates concurrently.
 
 - **Challenge**: Objective jobs executed on the backend are assigned random strings as IDs by BullMQ by default. This makes subscribing to them via the frontend socket difficult as it does not have knowledge of the IDs.
 - **Solution**: Programmed system for backend objectives to to follow order of IDs: mission 1 - objective 1, mission 1 - objective 2 and so on, while the frontend independently yet synchronously also tracks these IDs for the socket to subscribe to.
